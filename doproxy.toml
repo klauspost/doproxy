@@ -1,0 +1,24 @@
+bind = ":80"
+https = false
+tls-cert-file = "cert.file"
+tls-key-file = "key.file"
+add-x-forwarded-for = true
+watch-config = true
+inventory-file = "inventory-saved.toml"
+
+[loadbalancing]
+type = "leastconn"
+
+[backend]
+hostname-prefix = "auto-nginx"
+region = "nyc3"
+size = "1gb"
+image = "ubuntu-14-04-x64"
+user-data = "sample-startup.sh"
+backups = false
+latency-average-seconds = 30
+health-check-timeout = "250ms"
+dial-timeout = "2s"
+token =  "878a490235d53e34b44369b8e78"
+ssh-key-ids = ["163420"]                # DigitalOcean ID for your SSH Key
+
