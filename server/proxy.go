@@ -61,6 +61,12 @@ func (h *ReverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Get a backend
 	backend := h.GetBackend()
+	if backend == nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		// TODO: Add custom error message!
+		fmt.Fprintf(w, "No healthy backend available :(")
+		return
+	}
 	r.URL.Host = backend.Host()
 
 	webSock := false
@@ -120,7 +126,9 @@ func (h *ReverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		resp, err := backend.Transport().RoundTrip(r)
 		if err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			fmt.Fprintf(w, "Error: %v", err)
+			log.Printf("Error: %v", err)
+			// TODO: Add RETRY logic here!
+			fmt.Fprintf(w, "Error processing request.")
 			return
 		}
 
