@@ -1,6 +1,9 @@
 package server
 
 import (
+	"io"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -234,4 +237,71 @@ func TestConfigValidate(t *testing.T) {
 		}
 		n++
 	}
+}
+
+// Test that config is reloaded automatically.
+func TestReloadConfig(t *testing.T) {
+
+	tmp := filepath.Join(os.TempDir(), "doproxy-test-config-reload.toml")
+	t.Log("TestReloadConfig: temporary file at", tmp)
+
+	err := cp(tmp, "testdata/reloadconfig1.toml")
+	if err != nil {
+		t.Fatal("error copying config:", err)
+	}
+	s, err := NewServer(tmp)
+	if err != nil {
+		t.Fatal("error loading config:", err)
+	}
+
+	v := valid_config
+	v.WatchConfig = true
+	s.mu.RLock()
+	if !reflect.DeepEqual(s.Config, v) {
+		t.Fatalf("config mismatch:\nGot: %#v\nExpected: %#v", s.Config, v)
+	}
+	s.mu.RUnlock()
+
+	err = cp(tmp, "testdata/reloadconfig2.toml")
+	if err != nil {
+		t.Fatal("error copying second config:", err)
+	}
+
+	// Check for this change. We give it 3 seconds to reload.
+	v.AddForwarded = false
+	tries := 0
+	for {
+		s.mu.RLock()
+		if reflect.DeepEqual(s.Config, v) {
+			s.mu.RUnlock()
+			break
+		}
+		s.mu.RUnlock()
+		tries++
+		if tries > 30 {
+			t.Fatalf("configuration wasn't reloaded after 3 seconds")
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	os.Remove(tmp)
+}
+
+// From https://gist.github.com/elazarl/5507969
+func cp(dst, src string) error {
+	s, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	// no need to check errors on read only file, we already got everything
+	// we need from the filesystem, so nothing can go wrong now.
+	defer s.Close()
+	d, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(d, s); err != nil {
+		d.Close()
+		return err
+	}
+	return d.Close()
 }
