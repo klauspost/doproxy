@@ -57,9 +57,10 @@ func TestSaveInventory(t *testing.T) {
 	tmp := filepath.Join(os.TempDir(), "doproxy-test-inventory.toml")
 	t.Log("TestSaveInventory: temporarty file at", tmp)
 
-	// We set the time, so that is tested
+	// We set the time, so that is tested, rounded to 1ms.
 	bes := inv.backends
-	testtime := time.Now()
+	testtime := time.Now().Round(time.Millisecond)
+
 	for _, be := range bes {
 		d, ok := be.(*dropletBackend)
 		if !ok {
@@ -88,14 +89,20 @@ func TestSaveInventory(t *testing.T) {
 		var expect Droplet
 		switch i {
 		case 0:
-			expect = Droplet{ID: 1, Name: "auto-nginx 1", PrivateIP: "192.168.0.1", ServerHost: "192.168.0.1:8080", HealthURL: "http://192.168.0.1:8000/index.html", Started: testtime}
+			expect = Droplet{ID: 1, Name: "auto-nginx 1", PrivateIP: "192.168.0.1", ServerHost: "192.168.0.1:8080", HealthURL: "http://192.168.0.1:8000/index.html"}
 		case 1:
-			expect = Droplet{ID: 2, Name: "auto-nginx 2", PrivateIP: "192.168.0.2", ServerHost: "192.168.0.2:8080", HealthURL: "http://192.168.0.2:8000/index.html", Started: testtime}
+			expect = Droplet{ID: 2, Name: "auto-nginx 2", PrivateIP: "192.168.0.2", ServerHost: "192.168.0.2:8080", HealthURL: "http://192.168.0.2:8000/index.html"}
 		case 2:
-			expect = Droplet{ID: -73, Name: "auto-nginx 3", PrivateIP: "192.168.0.3", ServerHost: "192.168.0.3:8080", HealthURL: "http://192.168.0.3:8000/index.html", Started: testtime}
+			expect = Droplet{ID: -73, Name: "auto-nginx 3", PrivateIP: "192.168.0.3", ServerHost: "192.168.0.3:8080", HealthURL: "http://192.168.0.3:8000/index.html"}
 		default:
 			t.Fatalf("unexpected droplet\n%#v", drop.Droplet)
 		}
+		if !drop.Droplet.Started.Equal(testtime) {
+			t.Fatalf("started time mismatch:got '%#v', expected: '%#v'", drop.Droplet.Started, testtime)
+		}
+		//  Reset the time, so we don't get a pointer mismatch in reflect.DeepEqual
+		drop.Droplet.Started = time.Time{}
+		
 		if !reflect.DeepEqual(drop.Droplet, expect) {
 			t.Fatalf("inventory mismatch:\nGot:n%#v\nExpected:n%#v", drop.Droplet, expect)
 		}
