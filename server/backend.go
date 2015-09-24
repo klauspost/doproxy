@@ -10,16 +10,6 @@ import (
 	"time"
 )
 
-
-type backend struct {
-	rt           *statRT
-	healthClient *http.Client
-	closeMonitor chan struct{}
-	Stats        Stats
-	ServerHost  string
-	HealthURL    string
-}
-
 // A Backend is a single running backend instance.
 // It will monitor itself and update health and stats every second.
 type Backend interface {
@@ -30,15 +20,25 @@ type Backend interface {
 	Close()
 }
 
-type dropletBackend struct {
-	backend
-	Droplet Droplet
+// backend is a common base used for sharing functionality
+// between different backend types, so implementing different
+// ones are easier.
+type backend struct {
+	rt           *statRT
+	healthClient *http.Client
+	closeMonitor chan struct{}
+	Stats        Stats
+	ServerHost   string
+	HealthURL    string
 }
 
-// NewBackEnd returns a Backend configured with the
-// Droplet information.
-func NewDropletBackend(d Droplet, bec BackendConfig) Backend {
-	b := &dropletBackend{Droplet: d}
+// newBackend returns a new generic backend.
+// It will start monitoring the backend at once
+func newBackend(bec BackendConfig, serverHost, healthURL string) *backend {
+	b := &backend{
+		ServerHost: serverHost,
+		HealthURL:  healthURL,
+	}
 	// Create a transport that is used for health checks.
 	tr := &http.Transport{
 		Dial: (&net.Dialer{
@@ -53,8 +53,6 @@ func NewDropletBackend(d Droplet, bec BackendConfig) Backend {
 	// Reset running stats.
 	b.Stats.Latency = ewma.NewMovingAverage(float64(bec.LatencyAvg))
 	b.Stats.FailureRate = ewma.NewMovingAverage(10)
-	b.HealthURL = d.HealthURL
-	b.ServerHost = d.ServerHost
 
 	// Set up the backend transport.
 	tr = &http.Transport{
@@ -68,6 +66,23 @@ func NewDropletBackend(d Droplet, bec BackendConfig) Backend {
 
 	b.closeMonitor = make(chan struct{}, 0)
 	go b.startMonitor()
+	return b
+}
+
+// dropletBackend is a a backend instance with a DigitalOcean droplet
+// behind it.
+type dropletBackend struct {
+	*backend
+	Droplet Droplet
+}
+
+// NewDropletBackend returns a Backend configured with the
+// Droplet information.
+func NewDropletBackend(d Droplet, bec BackendConfig) Backend {
+	b := &dropletBackend{
+		backend: newBackend(bec, d.ServerHost, d.HealthURL),
+		Droplet: d,
+	}
 	return b
 }
 
