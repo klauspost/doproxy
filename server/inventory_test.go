@@ -55,7 +55,7 @@ func TestSaveInventory(t *testing.T) {
 		t.Fatal("error loading inventory:", err)
 	}
 	tmp := filepath.Join(os.TempDir(), "doproxy-test-inventory.toml")
-	t.Log("TestSaveInventory: temporarty file at", tmp)
+	t.Log("TestSaveInventory: temporary file at", tmp)
 
 	// We set the time, so that is tested, rounded to 1ms.
 	bes := inv.backends

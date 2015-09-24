@@ -11,9 +11,9 @@ import (
 )
 
 type ReverseProxy struct {
-	mu sync.RWMutex
-	balancer  LoadBalancer
-	conf      Config
+	mu       sync.RWMutex
+	balancer LoadBalancer
+	conf     Config
 }
 
 // NewReverseProxy will create a new reverse
@@ -26,7 +26,7 @@ func NewReverseProxy() *ReverseProxy {
 // NewReverseProxyConfig will create a new reverse
 // proxy with the supplied configuration and backend.
 func NewReverseProxyConfig(conf Config, lb LoadBalancer) *ReverseProxy {
-	return &ReverseProxy{conf: conf, balancer:lb}
+	return &ReverseProxy{conf: conf, balancer: lb}
 }
 
 // ServeHTTP handles reverse proxying requests.
@@ -120,7 +120,7 @@ func (h *ReverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		go cp(b, a)
 
 		// We return as soon as ONE direction encounter an error.
-		<- errc
+		<-errc
 	} else {
 
 		resp, err := backend.Transport().RoundTrip(r)
@@ -157,7 +157,7 @@ func copyHeader(dst, src http.Header) {
 }
 
 // Replace the configuration with another one.
-func (h* ReverseProxy) SetConfig(conf Config) {
+func (h *ReverseProxy) SetConfig(conf Config) {
 	h.mu.Lock()
 	h.conf = conf
 	h.mu.Unlock()
@@ -167,7 +167,7 @@ func (h* ReverseProxy) SetConfig(conf Config) {
 // with the new ones. Requests currently being served will
 // still go to the old backends, but new ones will go to
 // a new one.
-func (h* ReverseProxy) SetBackends(balancer LoadBalancer) {
+func (h *ReverseProxy) SetBackends(balancer LoadBalancer) {
 	h.mu.Lock()
 	if h.balancer != nil {
 		h.balancer.Close()
@@ -190,4 +190,3 @@ func (h *ReverseProxy) GetBackend() Backend {
 	defer h.mu.RUnlock()
 	return h.balancer.Backend()
 }
-
