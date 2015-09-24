@@ -38,7 +38,7 @@ type lbBase struct {
 	inv *Inventory
 }
 
-// roundRobin is a load balancer that simply
+// roundRobin is a load balancer that
 // switches between all the healthy backends.
 type roundRobin struct {
 	lbBase
@@ -54,9 +54,7 @@ func (r *lbBase) Close() {
 
 // NewRoundRobin Returns a new round-robin loadbalancer
 func newRoundRobin(b *Inventory) LoadBalancer {
-	r := &roundRobin{}
-	r.inv = b
-	return r
+	return &roundRobin{lbBase: lbBase{inv: b}}
 }
 
 // Backend will return next server in a round-robin.
@@ -79,7 +77,7 @@ func (r *roundRobin) Backend() Backend {
 	}
 }
 
-// leastConn is a load balancer that simply
+// leastConn is a load balancer that
 // returns the backend with the fewest connections.
 type leastConn struct {
 	lbBase
@@ -87,9 +85,7 @@ type leastConn struct {
 
 // NewRoundRobin Returns a new least-connections loadbalancer
 func newLeastConn(b *Inventory) LoadBalancer {
-	r := &leastConn{}
-	r.inv = b
-	return r
+	return &leastConn{lbBase: lbBase{inv: b}}
 }
 
 // Backend will return the backend with the least connections
