@@ -188,6 +188,9 @@ func (c BackendConfig) Validate() error {
 	if c.Token == "" {
 		return fmt.Errorf("No 'token' specified")
 	}
+	if c.LatencyAvg <= 0 {
+		return fmt.Errorf("'latency-average-seconds' = '%s' cannot be 0 or negative", c.LatencyAvg)
+	}
 	return nil
 }
 
@@ -226,6 +229,10 @@ type ProvisionConfig struct {
 // Validate provisioning configuration.
 // Will return the first error found.
 func (c ProvisionConfig) Validate() error {
+	// We skip more checks if not enabled.
+	if !c.Enable {
+		return nil
+	}
 	if c.MinBackends < 1 {
 		return fmt.Errorf("provisioning: 'min-backends' cannot be less than 1")
 	}
@@ -233,7 +240,7 @@ func (c ProvisionConfig) Validate() error {
 		return fmt.Errorf("provisioning: 'max-backends' cannot be less 'min-backends'")
 	}
 	if c.DownscaleLatency <= 0 {
-		return fmt.Errorf("provisioning: 'downscale-latency' cannot be less 0 or negative")
+		return fmt.Errorf("provisioning: 'downscale-latency' cannot be less than 0 or negative")
 	}
 	if c.UpscaleLatency <= c.DownscaleLatency {
 		return fmt.Errorf("provisioning: 'upscale-latency' cannot be less than or equal to 'downscale latency'")
@@ -249,6 +256,9 @@ func (c ProvisionConfig) Validate() error {
 	}
 	if c.UpscaleEvery < 0 {
 		return fmt.Errorf("provisioning: 'upscale-every' cannot be negative")
+	}
+	if c.MaxHealthFailures < 1 {
+		return fmt.Errorf("provisioning: 'max-health-failures' must be bigger than 0")
 	}
 	return nil
 }
