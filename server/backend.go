@@ -158,12 +158,12 @@ func (b *backend) healthCheck() {
 
 // Transport returns a RoundTripper that will collect stats
 // about the backend.
-func (b backend) Transport() http.RoundTripper {
+func (b *backend) Transport() http.RoundTripper {
 	return b.rt
 }
 
 // Healthy returns the healthy state of the backend
-func (b backend) Healthy() bool {
+func (b *backend) Healthy() bool {
 	b.Stats.mu.RLock()
 	ok := b.Stats.Healthy
 	b.Stats.mu.RUnlock()
@@ -171,7 +171,7 @@ func (b backend) Healthy() bool {
 }
 
 // Host returns the host address of the backend.
-func (b backend) Host() string {
+func (b *backend) Host() string {
 	return b.ServerHost
 }
 
@@ -183,7 +183,7 @@ func (b *backend) Close() {
 
 // Connections returns the number of currently running requests.
 // Does not include websocket connections.
-func (b backend) Connections() int {
+func (b *backend) Connections() int {
 	b.rt.mu.RLock()
 	n := b.rt.running
 	b.rt.mu.RUnlock()
