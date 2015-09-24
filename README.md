@@ -1,5 +1,5 @@
 # doproxy
-Reverse Proxy load balancer for managing multiple Digital Ocean backends.
+Reverse Proxy load balancer for managing multiple DigitalOcean backends.
 
 # Do not use: Still in development
 

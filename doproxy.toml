@@ -4,7 +4,7 @@ tls-cert-file = "cert.file"
 tls-key-file = "key.file"
 add-x-forwarded-for = true
 watch-config = true
-inventory-file = "inventory-saved.toml"
+inventory-file = "inventory.toml"
 
 [loadbalancing]
 type = "leastconn"
