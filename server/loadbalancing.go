@@ -3,8 +3,8 @@ package server
 import (
 	"fmt"
 	"log"
-	"sync"
 	"math"
+	"sync"
 )
 
 // A LoadBalancer is an interface for algorithms
@@ -34,7 +34,7 @@ func NewLoadBalancer(conf LBConfig, i *Inventory) (LoadBalancer, error) {
 
 // lbBase is common functionality for all load balancers
 type lbBase struct {
-	mu       sync.Mutex
+	mu  sync.Mutex
 	inv *Inventory
 }
 
@@ -115,7 +115,6 @@ func (r *leastConn) Backend() Backend {
 	}
 	return best
 }
-
 
 // TODO: Implement
 type lowestLatency struct {
