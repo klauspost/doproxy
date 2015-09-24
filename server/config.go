@@ -130,6 +130,10 @@ func (c Config) Validate() error {
 	if err != nil {
 		return err
 	}
+	err = c.Provision.Validate()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -191,6 +195,8 @@ func (c BackendConfig) Validate() error {
 // and stopping backends. This information is mainly used to
 // instantiate and destroy backends on demand.
 type ProvisionConfig struct {
+	Enable bool `toml:"enable"`
+
 	// The minimum number of running backends.
 	MinBackends int `toml:"min-backends"`
 	// The maximum number of running backends.
