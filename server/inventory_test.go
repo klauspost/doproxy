@@ -102,13 +102,13 @@ func TestSaveInventory(t *testing.T) {
 		}
 		//  Reset the time, so we don't get a pointer mismatch in reflect.DeepEqual
 		drop.Droplet.Started = time.Time{}
-		
+
 		if !reflect.DeepEqual(drop.Droplet, expect) {
 			t.Fatalf("inventory mismatch:\nGot:n%#v\nExpected:n%#v", drop.Droplet, expect)
 		}
 	}
 	err = os.Remove(tmp)
 	if err != nil {
-		t.Fatal("error removing temporary incentory file", err)
+		t.Fatal("error removing temporary inventory file", err)
 	}
 }
