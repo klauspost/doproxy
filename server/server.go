@@ -14,10 +14,10 @@ import (
 // to run multiple servers at once with different
 // configurations.
 type Server struct {
-	Config  Config
-	mu      sync.RWMutex
-	handler *ReverseProxy
-	exitMonInv chan chan struct{}  // Channel to indicate that inventory monitoring must stop.
+	Config     Config
+	mu         sync.RWMutex
+	handler    *ReverseProxy
+	exitMonInv chan chan struct{} // Channel to indicate that inventory monitoring must stop.
 }
 
 // NewServer will read the supplied config file,
@@ -153,7 +153,9 @@ func (s *Server) MonitorInventory() error {
 				// Monitor must stop
 			case n := <-stop:
 				exit.Cancel()
+				watcher.Remove(file)
 				close(n)
+				log.Println("No longer watching", file)
 				return
 			}
 		}
