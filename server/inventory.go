@@ -14,7 +14,7 @@ import (
 // inventory. This is used by the load balancer to
 // select a backend to send incoming requests to.
 type Inventory struct {
-	backends []*Backend
+	backends []Backend
 	bec      BackendConfig
 	mu       sync.RWMutex
 }
@@ -58,11 +58,11 @@ func ReadInventory(file string, bec BackendConfig) (*Inventory, error) {
 
 	inv := &Inventory{
 		bec:      bec,
-		backends: make([]*Backend, 0, len(drops.Droplets)),
+		backends: make([]Backend, 0, len(drops.Droplets)),
 	}
 
 	for _, v := range drops.Droplets {
-		inv.backends = append(inv.backends, NewBackEnd(v, bec))
+		inv.backends = append(inv.backends, NewDropletBackend(v, bec))
 	}
 
 	return inv, nil
@@ -81,7 +81,10 @@ func (i *Inventory) Save(file string) error {
 	// Put into object
 	drops := Droplets{}
 	for _, be := range i.backends {
-		drops.Droplets = append(drops.Droplets, be.Droplet)
+		drop, ok := be.(*dropletBackend)
+		if ok {
+			drops.Droplets = append(drops.Droplets, drop.Droplet)
+		}
 	}
 
 	// Marshall the inventory.

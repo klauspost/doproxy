@@ -10,28 +10,40 @@ import (
 	"time"
 )
 
-// A backend is a single running droplet instance.
-// It will monitor itself and update health and stats every second.
-// TODO: To support multiple backend types this could be made an interface.
-type Backend struct {
-	Droplet
-	Started time.Time
-	rt      *statRT
 
+type backend struct {
+	rt           *statRT
 	healthClient *http.Client
 	closeMonitor chan struct{}
 	Stats        Stats
+	ServerHost  string
+	HealthURL    string
+}
+
+// A Backend is a single running backend instance.
+// It will monitor itself and update health and stats every second.
+type Backend interface {
+	Transport() http.RoundTripper
+	Host() string
+	Healthy() bool
+	Connections() int
+	Close()
+}
+
+type dropletBackend struct {
+	backend
+	Droplet Droplet
 }
 
 // NewBackEnd returns a Backend configured with the
 // Droplet information.
-func NewBackEnd(d Droplet, bec BackendConfig) *Backend {
-	b := &Backend{Droplet:d}
+func NewDropletBackend(d Droplet, bec BackendConfig) Backend {
+	b := &dropletBackend{Droplet: d}
 	// Create a transport that is used for health checks.
 	to, _ := time.ParseDuration(bec.HealthTimeout)
 	tr := &http.Transport{
 		Dial: (&net.Dialer{
-			Timeout: to,
+			Timeout:   to,
 			KeepAlive: 0,
 		}).Dial,
 		DisableKeepAlives:  true,
@@ -42,10 +54,12 @@ func NewBackEnd(d Droplet, bec BackendConfig) *Backend {
 	// Reset running stats.
 	b.Stats.Latency = ewma.NewMovingAverage(float64(bec.LatencyAvg))
 	b.Stats.FailureRate = ewma.NewMovingAverage(10)
+	b.HealthURL = d.HealthURL
+	b.ServerHost = d.ServerHost
 
 	// Set up the backend transport.
 	tod, _ := time.ParseDuration(bec.DialTimeout)
-	tr =  &http.Transport{
+	tr = &http.Transport{
 		Dial: func(network, addr string) (net.Conn, error) {
 			return net.DialTimeout(network, addr, tod)
 		},
@@ -59,12 +73,11 @@ func NewBackEnd(d Droplet, bec BackendConfig) *Backend {
 	return b
 }
 
-
 // startMonitor will monitor stats of the backend
 // Will at times require BOTH rt and Stats mutex.
 // This means that no other goroutine should acquire
 // both at the same time.
-func (b *Backend) startMonitor() {
+func (b *backend) startMonitor() {
 	s := b.rt
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
@@ -103,7 +116,7 @@ func (b *Backend) startMonitor() {
 			}
 			b.Stats.mu.Unlock()
 		case <-end:
-		    exit.Cancel()
+			exit.Cancel()
 			return
 		case n := <-exit:
 			close(n)
@@ -117,7 +130,7 @@ func (b *Backend) startMonitor() {
 // This is called by healthCheck every second.
 // It assumes b.Stats.mu is locked, but will unlock it while
 // the request is running.
-func (b *Backend) healthCheck() {
+func (b *backend) healthCheck() {
 	// If no checkurl har been set, assume we are healthy
 	if b.HealthURL == "" {
 		b.Stats.Healthy = true
@@ -145,26 +158,39 @@ func (b *Backend) healthCheck() {
 	resp.Body.Close()
 }
 
-// Close the backend, which will shut down monitoring
-// of the backend.
-func (b *Backend) Close() {
-	close(b.closeMonitor)
+// Transport returns a RoundTripper that will collect stats
+// about the backend.
+func (b backend) Transport() http.RoundTripper {
+	return b.rt
+}
+
+// Healthy returns the healthy state of the backend
+func (b backend) Healthy() bool {
+	b.Stats.mu.RLock()
+	ok := b.Stats.Healthy
+	b.Stats.mu.RUnlock()
+	return ok
 }
 
 // Host returns the host address of the backend.
-func (b Backend) Host() string {
+func (b backend) Host() string {
 	return b.ServerHost
+}
+
+// Close the backend, which will shut down monitoring
+// of the backend.
+func (b *backend) Close() {
+	close(b.closeMonitor)
 }
 
 // Connections returns the number of currently running requests.
 // Does not include websocket connections.
-func (b Backend) Connections() (int) {
+func (b backend) Connections() int {
 	b.rt.mu.RLock()
 	n := b.rt.running
 	b.rt.mu.RUnlock()
 	return n
 }
-
 
 func (s *statRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	// Record this request as running
@@ -195,20 +221,6 @@ func (s *statRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-// Transport returns a RoundTripper that will collect stats
-// about the backend.
-func (b Backend) Transport() http.RoundTripper {
-	return b.rt
-}
-
-// Healthy returns the healthy state of the backend
-func (b Backend) Healthy() bool {
-	b.Stats.mu.RLock()
-	ok := b.Stats.Healthy
-	b.Stats.mu.RUnlock()
-	return ok
-}
-
 // Stats contain regularly updated statistics about a
 // backend. To access be sure to hold the 'mu' mutex.
 type Stats struct {
@@ -234,4 +246,3 @@ func newStatTP(rt http.RoundTripper) *statRT {
 	s := &statRT{rt: rt}
 	return s
 }
-

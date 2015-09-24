@@ -177,7 +177,7 @@ func (h *ReverseProxy) GetConfig() Config {
 
 // GetBackend will return a backend from
 // the current load balancer.
-func (h *ReverseProxy) GetBackend() *Backend {
+func (h *ReverseProxy) GetBackend() Backend {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	return h.balancer.Backend()

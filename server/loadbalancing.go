@@ -12,7 +12,7 @@ import (
 type LoadBalancer interface {
 	// Return a single backend instance.
 	// If none can be found nil will be returned.
-	Backend() *Backend
+	Backend() Backend
 
 	// Close all backends and stop monitoring them
 	Close()
@@ -61,7 +61,7 @@ func newRoundRobin(b *Inventory) LoadBalancer {
 
 // Backend will return next server in a round-robin.
 // Will return nil if no healthy backend can be found.
-func (r *roundRobin) Backend() *Backend {
+func (r *roundRobin) Backend() Backend {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	first := r.next
@@ -94,10 +94,10 @@ func newLeastConn(b *Inventory) LoadBalancer {
 
 // Backend will return the backend with the least connections
 // Will return nil if no healthy backend can be found
-func (r *leastConn) Backend() *Backend {
+func (r *leastConn) Backend() Backend {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	var best *Backend
+	var best Backend
 	lowest := math.MaxInt32
 	for _, be := range r.inv.backends {
 		if !be.Healthy() {
