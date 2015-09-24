@@ -1,24 +1,37 @@
-bind = ":80"
-https = false
-tls-cert-file = "cert.file"
-tls-key-file = "key.file"
-add-x-forwarded-for = true
-watch-config = true
-inventory-file = "inventory.toml"
+bind = ":80"                        # Address to bind the incoming port to
+https = false                       # Use TLS
+tls-cert-file = "cert.file"         # Certificate file for TLS
+tls-key-file = "key.file"           # Key file for TLS
+add-x-forwarded-for = true          # Add "X-Forwarded-For" header when forwarding requests to the backend.
+watch-config = true                 # Watch this file for configuration changes.
+inventory-file = "inventory.toml"   # Inventory file
 
 [loadbalancing]
-type = "leastconn"
+type = "roundrobin"                 # Load balancing algorithm. Can be "roundrobin" or "leastconn"
 
 [backend]
+latency-average-seconds = 30        #
+health-check-timeout = "250ms"
+dial-timeout = "2s"
+token =  "878a490235d53e34b44369b8e78"
+ssh-key-ids = ["163420"]                # DigitalOcean ID for your SSH Key
 hostname-prefix = "auto-nginx"
 region = "nyc3"
 size = "1gb"
 image = "ubuntu-14-04-x64"
 user-data = "sample-startup.sh"
 backups = false
-latency-average-seconds = 30
-health-check-timeout = "250ms"
-dial-timeout = "2s"
-token =  "878a490235d53e34b44369b8e78"
-ssh-key-ids = ["163420"]                # DigitalOcean ID for your SSH Key
 
+[provisioning]
+min-backends = 1                # The minimum number of running backends.
+max-backends = 2                # The maximum number of running backends.
+downscale-latency = "150ms"     # If latency is below this, deprovision one server.
+downscale-time = "15m"          # How long should the latency be below threshold before a server is deprovisioned.
+                                # This is an Exponentially Weighted Moving Average.
+downscale-every = "1h"          # How long between a server can be deprovisioned.
+upscale-latency = "500ms"       # If the latency is above this, provision a new server.
+upscale-time = "3m"             # How long should the latency be below threshold before a server is provisioned.
+                                # This is an Exponentially Weighted Moving Average.
+upscale-every = "15m"           # How long between a new server can be provisioned.
+max-health-failures = 180       # If a server fails this many health consequtive health checks, it will be deprovisioned.
+                                # Health checks is performed every second.

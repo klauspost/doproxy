@@ -40,10 +40,9 @@ type dropletBackend struct {
 func NewDropletBackend(d Droplet, bec BackendConfig) Backend {
 	b := &dropletBackend{Droplet: d}
 	// Create a transport that is used for health checks.
-	to, _ := time.ParseDuration(bec.HealthTimeout)
 	tr := &http.Transport{
 		Dial: (&net.Dialer{
-			Timeout:   to,
+			Timeout:   time.Duration(bec.HealthTimeout),
 			KeepAlive: 0,
 		}).Dial,
 		DisableKeepAlives:  true,
@@ -58,10 +57,9 @@ func NewDropletBackend(d Droplet, bec BackendConfig) Backend {
 	b.ServerHost = d.ServerHost
 
 	// Set up the backend transport.
-	tod, _ := time.ParseDuration(bec.DialTimeout)
 	tr = &http.Transport{
 		Dial: func(network, addr string) (net.Conn, error) {
-			return net.DialTimeout(network, addr, tod)
+			return net.DialTimeout(network, addr, time.Duration(bec.DialTimeout))
 		},
 		Proxy: http.ProxyFromEnvironment,
 	}

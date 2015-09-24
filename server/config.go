@@ -6,21 +6,23 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
 // Config contains the main server configuration
 // This maps directly to the main config file.
 type Config struct {
-	Bind          string        `toml:"bind"`
-	Https         bool          `toml:"https"`
-	CertFile      string        `toml:"tls-cert-file"`
-	KeyFile       string        `toml:"tls-key-file"`
-	AddForwarded  bool          `toml:"add-x-forwarded-for"`
-	WatchConfig   bool          `toml:"watch-config"` // Watch the configuration file for changes
-	LoadBalancing LBConfig      `toml:"loadbalancing"`
-	InventoryFile string        `toml:"inventory-file"`
-	Backend       BackendConfig `toml:"backend"`
+	Bind          string          `toml:"bind"`
+	Https         bool            `toml:"https"`
+	CertFile      string          `toml:"tls-cert-file"`
+	KeyFile       string          `toml:"tls-key-file"`
+	AddForwarded  bool            `toml:"add-x-forwarded-for"`
+	WatchConfig   bool            `toml:"watch-config"` // Watch the configuration file for changes
+	LoadBalancing LBConfig        `toml:"loadbalancing"`
+	InventoryFile string          `toml:"inventory-file"`
+	Backend       BackendConfig   `toml:"backend"`
+	Provision     ProvisionConfig `toml:"provisioning"`
 }
 
 // ReadConfig will open the file with the supplied name
@@ -151,17 +153,17 @@ func (c LBConfig) Validate() error {
 
 // BackendConfig contains configuration for handling
 // backends. This information is mainly used to
-// instanciate and destroy backends on demand.
+// instantiate and destroy backends on demand.
 type BackendConfig struct {
 	HostPrefix    string   `toml:"hostname-prefix"`
-	DialTimeout   string   `toml:"dial-timeout"`
+	DialTimeout   Duration `toml:"dial-timeout"`
 	Region        string   `toml:"region"`
 	Size          string   `toml:"size"`
 	Image         string   `toml:"image"`
 	UserData      string   `toml:"user-data"`
 	Backups       bool     `toml:"backups"`
 	LatencyAvg    int      `toml:"latency-average-seconds"`
-	HealthTimeout string   `toml:"health-check-timeout"`
+	HealthTimeout Duration `toml:"health-check-timeout"`
 	Token         string   `toml:"token"`
 	SSHKeyID      []string `toml:"ssh-key-ids"`
 }
@@ -170,25 +172,94 @@ type BackendConfig struct {
 // Will return the first error found.
 // FIXME: Check remaining settings.
 func (c BackendConfig) Validate() error {
-	to, err := time.ParseDuration(c.HealthTimeout)
-	if err != nil {
-		return fmt.Errorf("Cannot convert 'health-check-timeout' = '%s' to time.Duration: %s", c.HealthTimeout, err.Error())
-	}
-	if to <= 0 {
+	if c.HealthTimeout <= 0 {
 		return fmt.Errorf("'health-check-timeout' = '%s' cannot be 0 or negative", c.HealthTimeout)
 	}
-	if to > time.Second {
+	if c.HealthTimeout > Duration(time.Second) {
 		return fmt.Errorf("'health-check-timeout' = '%s' cannot be longer than '1s'", c.HealthTimeout)
 	}
-	to, err = time.ParseDuration(c.DialTimeout)
-	if err != nil {
-		return fmt.Errorf("Cannot convert 'dial-timeout' = '%s' to time.Duration: %s", c.DialTimeout, err.Error())
-	}
-	if to <= 0 {
+	if c.DialTimeout <= 0 {
 		return fmt.Errorf("'dial-timeout' = '%s' cannot be 0 or negative", c.DialTimeout)
 	}
 	if c.Token == "" {
 		return fmt.Errorf("No 'token' specified")
 	}
 	return nil
+}
+
+// ProvisionConfig contains configuration for starting
+// and stopping backends. This information is mainly used to
+// instantiate and destroy backends on demand.
+type ProvisionConfig struct {
+	// The minimum number of running backends.
+	MinBackends int `toml:"min-backends"`
+	// The maximum number of running backends.
+	MaxBackends int `toml:"max-backends"`
+
+	// If latency is below this, deprovision one server.
+	DownscaleLatency Duration `toml:"downscale-latency"`
+	// How long should the latency be below threshold before a server is deprovisioned.
+	// This is an Exponentially Weighted Moving Average.
+	DownscaleTime Duration `toml:"downscale-time"`
+	// How long between a server can be deprovisioned.
+	DownscaleEvery Duration `toml:"downscale-every"`
+
+	// If the latency is above this, provision a new server.
+	UpscaleLatency Duration `toml:"upscale-latency"`
+	// How long should the latency be below threshold before a server is provisioned.
+	// This is an Exponentially Weighted Moving Average.
+	UpscaleTime Duration `toml:"upscale-time"`
+	// How long between a new server can be provisioned.
+	UpscaleEvery Duration `toml:"upscale-every"`
+
+	// If a server fails this many health consequtive health checks, it will be deprovisioned.
+	// Health checks is performed every second.
+	MaxHealthFailures int `toml:"max-health-failures"`
+}
+
+// Validate provisioning configuration.
+// Will return the first error found.
+func (c ProvisionConfig) Validate() error {
+	if c.MinBackends < 1 {
+		return fmt.Errorf("provisioning: 'min-backends' cannot be less than 1")
+	}
+	if c.MaxBackends < c.MinBackends {
+		return fmt.Errorf("provisioning: 'max-backends' cannot be less 'min-backends'")
+	}
+	if c.DownscaleLatency <= 0 {
+		return fmt.Errorf("provisioning: 'downscale-latency' cannot be less 0 or negative")
+	}
+	if c.UpscaleLatency <= c.DownscaleLatency {
+		return fmt.Errorf("provisioning: 'upscale-latency' cannot be less than or equal to 'downscale latency'")
+	}
+	if c.DownscaleTime < Duration(time.Second) {
+		return fmt.Errorf("provisioning: 'downscale-time' cannot be less 1 second")
+	}
+	if c.UpscaleTime < Duration(time.Second) {
+		return fmt.Errorf("provisioning: 'upscale-time' cannot be less 1 second")
+	}
+	if c.DownscaleEvery < 0 {
+		return fmt.Errorf("provisioning: 'downscale-every' cannot be negative")
+	}
+	if c.UpscaleEvery < 0 {
+		return fmt.Errorf("provisioning: 'upscale-every' cannot be negative")
+	}
+	return nil
+}
+
+// Duration is our own time.Duration that fulfills  the
+// toml.UnmarshalTOML interface.
+type Duration time.Duration
+
+func (d *Duration) UnmarshalTOML(data []byte) error {
+	dur, err := time.ParseDuration(strings.Trim(string(data), "\""))
+	if err != nil {
+		return err
+	}
+	*d = Duration(dur)
+	return nil
+}
+
+func (d Duration) String() string {
+	return time.Duration(d).String()
 }
