@@ -36,7 +36,18 @@ Use `go get -u github.com/klauspost/doproxy` to retrieve the code. Enter the "$G
 
 ## setting up doproxy
 
+With the deafult settings, you will like see messages like this:
+```
+checking health of http://192.168.0.1:8080/index.html Error: Get http://192.168.0.1:8080/index.html: dial tcp 192.168.0.1:8080: i/o timeout
+```
 
+To fix this, open the `inventory.toml` file. The important lines are these:
+```
+server-host = "192.168.0.1:8080"
+health-url = "http://192.168.0.1:8080/index.html"
+```
+
+These should point to your running backends. Modify them to match your setup. Once you save them, the `doproxy` server should automatically reload and apply your new settings. You can modify the running configuration at any time, and it will automatically be reloaded. Don't worry; if you make a mistake `doproxy` will simply retain the last valid configuration.
 
 # todo 
 * Load balancer tests
