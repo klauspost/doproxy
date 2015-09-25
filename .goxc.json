@@ -3,5 +3,5 @@
 	"BuildConstraints": "linux,!386 windows,amd64 freebsd,!386 darwin,amd64",
 	"PackageVersion": "0.1.0",
 	"ConfigVersion": "0.9",
-	"ResourcesInclude": "doproxy.toml,inventory.toml,sample-userdata.sh"
+	"ResourcesInclude": "doproxy.toml,inventory.toml"
 }
