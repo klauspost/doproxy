@@ -68,6 +68,6 @@ Note that *provisioning* currently isn't available, so modifying the configurati
 * Provide docker image.
 
 # license
-This software is released under the MIT Licence. See the LICENSE file for more deatails.
+This software is released under the MIT Licence. See the LICENSE file for more details.
 
 (c) 2015 Klaus Post
