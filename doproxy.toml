@@ -24,7 +24,7 @@ hostname-prefix = "auto-nginx"              # Prefix added to new droplets.
 region = "nyc3"
 size = "1gb"
 image = "ubuntu-14-04-x64"
-user-data = "sample-startup.sh"
+user-data = "sample-userdata.sh"
 backups = false
 
 
