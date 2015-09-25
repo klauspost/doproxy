@@ -18,6 +18,8 @@ dial-timeout = "2s"                 # Timeout for connecting to a backend.
 health-check-timeout = "250ms"      # Timeout for a health check. Should be less than 1 second.
 
 # DigitalOcean backend creation information
+[do-provisioner]
+enable = true
 token =  "878a490235d53e34b44369b8e78"      # DigitalOcean access token with Read and Write access
 ssh-key-ids = ["163420"]                    # DigitalOcean ID for your SSH Key
 hostname-prefix = "auto-nginx"              # Prefix added to new droplets.

@@ -23,6 +23,7 @@ type Config struct {
 	InventoryFile string          `toml:"inventory-file"`
 	Backend       BackendConfig   `toml:"backend"`
 	Provision     ProvisionConfig `toml:"provisioning"`
+	DO            DOConfig        `toml:"do-provisioner"`
 }
 
 func ReadConfigFile(file string) (*Config, error) {
@@ -141,6 +142,10 @@ func (c Config) Validate() error {
 	if err != nil {
 		return err
 	}
+	err = c.DO.Validate()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -166,17 +171,9 @@ func (c LBConfig) Validate() error {
 // backends. This information is mainly used to
 // instantiate and destroy backends on demand.
 type BackendConfig struct {
-	HostPrefix    string   `toml:"hostname-prefix"`
 	DialTimeout   Duration `toml:"dial-timeout"`
-	Region        string   `toml:"region"`
-	Size          string   `toml:"size"`
-	Image         string   `toml:"image"`
-	UserData      string   `toml:"user-data"`
-	Backups       bool     `toml:"backups"`
 	LatencyAvg    int      `toml:"latency-average-seconds"`
 	HealthTimeout Duration `toml:"health-check-timeout"`
-	Token         string   `toml:"token"`
-	SSHKeyID      []string `toml:"ssh-key-ids"`
 }
 
 // Validate backend configuration.
@@ -192,11 +189,31 @@ func (c BackendConfig) Validate() error {
 	if c.DialTimeout <= 0 {
 		return fmt.Errorf("'dial-timeout' = '%s' cannot be 0 or negative", c.DialTimeout)
 	}
-	if c.Token == "" {
-		return fmt.Errorf("No 'token' specified")
-	}
 	if c.LatencyAvg <= 0 {
 		return fmt.Errorf("'latency-average-seconds' = '%d' cannot be 0 or negative", c.LatencyAvg)
+	}
+	return nil
+}
+
+// DigitalOcean provisioning config
+type DOConfig struct {
+	Enable     bool     `toml:"enable"`
+	HostPrefix string   `toml:"hostname-prefix"`
+	Region     string   `toml:"region"`
+	Size       string   `toml:"size"`
+	Image      string   `toml:"image"`
+	UserData   string   `toml:"user-data"`
+	Backups    bool     `toml:"backups"`
+	Token      string   `toml:"token"`
+	SSHKeyID   []string `toml:"ssh-key-ids"`
+}
+
+func (c DOConfig) Validate() error {
+	if !c.Enable {
+		return nil
+	}
+	if c.Token == "" {
+		return fmt.Errorf("No 'token' specified")
 	}
 	return nil
 }

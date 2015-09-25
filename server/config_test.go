@@ -22,17 +22,20 @@ var valid_config = Config{
 	},
 	InventoryFile: "inventory.toml",
 	Backend: BackendConfig{
-		HostPrefix:    "auto-nginx",
 		DialTimeout:   2000000000,
-		Region:        "nyc3",
-		Size:          "1gb",
-		Image:         "ubuntu-14-04-x64",
-		UserData:      "sample-startup.sh",
-		Backups:       false,
 		LatencyAvg:    30,
 		HealthTimeout: 250000000,
-		Token:         "878a490235d53e34b44369b8e78",
-		SSHKeyID:      []string{"163420"},
+	},
+	DO: DOConfig{
+		Enable:     true,
+		HostPrefix: "auto-nginx",
+		Region:     "nyc3",
+		Size:       "1gb",
+		Image:      "ubuntu-14-04-x64",
+		UserData:   "sample-startup.sh",
+		Backups:    false,
+		Token:      "878a490235d53e34b44369b8e78",
+		SSHKeyID:   []string{"163420"},
 	},
 	Provision: ProvisionConfig{
 		Enable:            true,
@@ -141,7 +144,7 @@ func TestConfigValidate(t *testing.T) {
 			v.Backend.DialTimeout = 0
 
 		case 13: // Must be set
-			v.Backend.Token = ""
+			v.DO.Token = ""
 
 		case 14: // Must be 1 or more
 			v.Provision.MinBackends = 0
