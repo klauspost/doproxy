@@ -11,7 +11,7 @@ import (
 
 // Must matched parsed values of "testdata/validconfig.toml"
 var valid_config = Config{
-	Bind:         ":80",
+	Bind:         ":8000",
 	Https:        false,
 	CertFile:     "cert.file",
 	KeyFile:      "key.file",

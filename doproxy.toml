@@ -1,4 +1,4 @@
-bind = ":80"                        # Address to bind the incoming port to
+bind = ":8000"                      # Address to bind the incoming port to
 https = false                       # Use TLS
 tls-cert-file = "cert.file"         # Certificate file for TLS
 tls-key-file = "key.file"           # Key file for TLS
