@@ -25,39 +25,46 @@ type Config struct {
 	Provision     ProvisionConfig `toml:"provisioning"`
 }
 
+func ReadConfigFile(file string) (*Config, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	conf, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+	config := Config{}
+	err = toml.Unmarshal(conf, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	err = config.Validate()
+	if err != nil {
+		return nil, err
+	}
+	return &config, nil
+}
+
 // ReadConfig will open the file with the supplied name
 // and read the configuration from that.
 // Use init, to initialize the configuration on startup, if
 // you are reloading the configuration set it to false.
 // If successful, the new config will be applied to the server.
 func (s *Server) ReadConfig(file string, init bool) error {
-	f, err := os.Open(file)
+	config, err := ReadConfigFile(file)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	conf, err := ioutil.ReadAll(f)
-	if err != nil {
-		return err
-	}
-	config := Config{}
-	err = toml.Unmarshal(conf, &config)
-	if err != nil {
-		return err
-	}
-
-	err = config.Validate()
-	if err != nil {
-		return err
-	}
-
 	if init {
 		s.mu.Lock()
-		s.Config = config
+		s.Config = *config
 		s.mu.Unlock()
 		return nil
 	}
-	err = s.UpdateConfig(config)
+	err = s.UpdateConfig(*config)
 	if err != nil {
 		return err
 	}
