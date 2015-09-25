@@ -69,7 +69,7 @@ func TestSaveInventory(t *testing.T) {
 		d.Droplet.Started = testtime
 	}
 	// Save inventory
-	err = inv.Save(tmp)
+	err = inv.SaveDroplets(tmp)
 	if err != nil {
 		t.Fatal("error writing inventory:", err)
 	}

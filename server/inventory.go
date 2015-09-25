@@ -34,9 +34,10 @@ type Droplets struct {
 	Droplets []Droplet `toml:"droplet"`
 }
 
-// NewInventory will create an empty inventory
-func NewInventory() *Inventory {
-	return &Inventory{}
+// NewInventory will a return a new Inventory
+// with the supplied backends and config.
+func NewInventory(b []Backend, bec BackendConfig) *Inventory {
+	return &Inventory{backends: b, bec: bec}
 }
 
 // ReadInventory will read an inventory file and return the found items.
@@ -68,9 +69,10 @@ func ReadInventory(file string, bec BackendConfig) (*Inventory, error) {
 	return inv, nil
 }
 
-// Save the current inventory to a specified file.
+// SaveDroplets will save all Doplets in the current
+// inventory to a specified file.
 // If the file exists it will be overwritten.
-func (i *Inventory) Save(file string) error {
+func (i *Inventory) SaveDroplets(file string) error {
 	// We do not want to get interrupted while saving the inventory
 	if shutdown.Lock() {
 		defer shutdown.Unlock()
