@@ -196,7 +196,7 @@ func (c BackendConfig) Validate() error {
 		return fmt.Errorf("No 'token' specified")
 	}
 	if c.LatencyAvg <= 0 {
-		return fmt.Errorf("'latency-average-seconds' = '%s' cannot be 0 or negative", c.LatencyAvg)
+		return fmt.Errorf("'latency-average-seconds' = '%d' cannot be 0 or negative", c.LatencyAvg)
 	}
 	return nil
 }
