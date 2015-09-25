@@ -29,7 +29,6 @@ func NewLoadBalancer(conf LBConfig, i *Inventory) (LoadBalancer, error) {
 	default:
 		return nil, fmt.Errorf("Unknown load balancer type %s", conf.Type)
 	}
-	return nil, fmt.Errorf("NewLoadBalancer: No balancer")
 }
 
 // lbBase is common functionality for all load balancers
