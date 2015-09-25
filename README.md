@@ -49,9 +49,9 @@ health-url = "http://192.168.0.1:8080/index.html"
 
 These should point to your running backends. Modify them to match your setup. Once you save them, the `doproxy` server should automatically reload and apply your new settings. You can modify the running configuration at any time, and it will automatically be reloaded. Don't worry; if you make a mistake `doproxy` will simply retain the last valid configuration.
 
-If you want to completely disable helath checks, simply uncomment the line using `#`, and all backends are assumed to be healthy.
+If you want to completely disable health checks, simply uncomment the line using `#`, and all backends are assumed to be healthy.
 
-You will also need to edit the main configuration [`doproxy.toml`](https://github.com/klauspost/doproxy/blob/master/doproxy.toml). Here you can adjust main settings like **bind port** and **address**, enable **https** and adjust **health check timeout**. 
+You will also need to edit the main configuration [`doproxy.toml`](https://github.com/klauspost/doproxy/blob/master/doproxy.toml). Here you can adjust main settings like **bind port** and **address**, enable **https** and adjust **health check timeout**. Note that most options can be changed on the fly by simply saving the file.
 
 If you want to specify a location of the `doproxy.toml` file, you can do this when starting the proxy like this: `doproxy -config=/home/user/doproxy.toml`.
 
