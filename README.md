@@ -5,28 +5,40 @@ The server supports hot configuration reloading, so you can change settings and 
 
 There is planned for automatic provisioning and de-provisioning, so your site can scale up and down depending on your demand.
 
+This is an extension of the idea behind [doproxy](https://github.com/thisismitch/doproxy) by Mitchell Anicas. Instead of managing a reverse proxy (HAProxy), this *is* a revserse proxy.
+
 [![Build Status](https://travis-ci.org/klauspost/doproxy.svg?branch=master)](https://travis-ci.org/klauspost/doproxy)
 [![GoDoc][1]][2]
 
 [1]: https://godoc.org/github.com/klauspost/doproxy/server?status.svg
 [2]: https://godoc.org/github.com/klauspost/doproxy/server
 
-# Warning: Alpha software
-
-This software is still under development, and therefore not production ready. Perform your own tests before deploying to make sure it doesn't have any unintended side-effects.
-
-This is an extension of the idea behind [doproxy](https://github.com/thisismitch/doproxy) by Mitchell Anicas. Instead of managing a reverse proxy (HAProxy), this *is* a revserse proxy.
-
 ## features
 * Simple reverse proxy setup.
 * Health checks on backends.
 * Hot configuration reload.
 * Selectable load balancing algorithm.
- 
+
+# Warning: Alpha software
+
+This software is still under development, and therefore not production ready. Perform your own tests before deploying to make sure it doesn't have any unintended side-effects.
+
 # setup
+Binary releases can be found on the [Releases](https://github.com/klauspost/doproxy/releases) page. Please use the ".deb" packages with care, I have not yet been able to verify them.
+
+Download the binary matching your system and unpack it. On some systems you will need to set the executable bit on the `doproxy` file.
+
+## installing from source
+
+This requires Go to be installed on your system, and your "gopath" to be set up.
+
+Use `go get -u github.com/klauspost/doproxy` to retrieve the code. Enter the "$GOPATH/src/github.com/klauspost/doproxy". Use `go install && dproxy` to start the proxy.
+
+## setting up doproxy
 
 
-## todo 
+
+# todo 
 * Load balancer tests
 * Automatic droplet creation/destruction. 
 * Make stats available
