@@ -41,7 +41,7 @@ With the deafult settings, you will like see messages like this:
 checking health of http://192.168.0.1:8080/index.html Error: Get http://192.168.0.1:8080/index.html: dial tcp 192.168.0.1:8080: i/o timeout
 ```
 
-To fix this, open the `inventory.toml` file. The important lines are these:
+To fix this, open the [`inventory.toml`](https://github.com/klauspost/doproxy/blob/master/inventory.toml) file. The important lines are these:
 ```
 server-host = "192.168.0.1:8080"
 health-url = "http://192.168.0.1:8080/index.html"
@@ -49,11 +49,23 @@ health-url = "http://192.168.0.1:8080/index.html"
 
 These should point to your running backends. Modify them to match your setup. Once you save them, the `doproxy` server should automatically reload and apply your new settings. You can modify the running configuration at any time, and it will automatically be reloaded. Don't worry; if you make a mistake `doproxy` will simply retain the last valid configuration.
 
+If you want to completely disable helath checks, simply uncomment the line using `#`, and all backends are assumed to be healthy.
+
+You will also need to edit the main configuration [`doproxy.toml`](https://github.com/klauspost/doproxy/blob/master/doproxy.toml). Here you can adjust main settings like **bind port** and **address**, enable **https** and adjust **health check timeout**. 
+
+If you want to specify a location of the `doproxy.toml` file, you can do this when starting the proxy like this: `doproxy -config=/home/user/doproxy.toml`.
+
+Note that *provisioning* currently isn't available, so modifying the configuration of these have no effect at the moment.
+
+
 # todo 
 * Load balancer tests
 * Automatic droplet creation/destruction. 
+* Retry on another backend on failure.
 * Make stats available
 * Configurable error handling
+* Make it a deamon.
+* Provide docker image.
 
 # license
 This software is released under the MIT Licence. See the LICENSE file for more deatails.
