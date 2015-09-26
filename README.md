@@ -1,5 +1,6 @@
-# doproxy
-Reverse Proxy load balancer for managing multiple DigitalOcean backends. It allows you to connect several backends to a single outgoing port, with load balancing between each server.
+![doproxy](https://img.klauspost.com/doproxy-trans-700.png "doproxy")
+
+doproxy is a a Reverse Proxy load balancer for managing multiple DigitalOcean backends. It allows you to connect several backends to a single outgoing port, with load balancing between each server.
 
 The server supports hot configuration reloading, so you can change settings and your backend inventory without having to restart the server. The server can automatically monitor your backends, and disable them if requests fail.
 
