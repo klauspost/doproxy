@@ -61,10 +61,15 @@ func newBackend(bec BackendConfig, serverHost, healthURL string) *backend {
 		},
 		Proxy: http.ProxyFromEnvironment,
 	}
-
 	b.rt = newStatTP(tr)
 
+	// If we have no health url, assume healthy
+	if healthURL == "" {
+		b.Stats.Healthy = true
+	}
+
 	b.closeMonitor = make(chan struct{}, 0)
+
 	go b.startMonitor()
 	return b
 }
@@ -97,6 +102,7 @@ func (b *backend) startMonitor() {
 	exit := shutdown.First()
 	end := b.closeMonitor
 	previous := time.Now()
+
 	for {
 		select {
 		case <-ticker.C:
