@@ -157,9 +157,16 @@ func (b *backend) healthCheck() {
 		return
 	}
 
+	req, err := http.NewRequest("GET", b.HealthURL, nil)
+	if err != nil {
+		log.Println("Error checking health of", b.HealthURL, "Error:", err)
+	}
+
+	req.Header.Set("User-Agent", "doproxy health checker")
+
 	b.Stats.mu.Unlock()
 	// Perform the check
-	resp, err := b.healthClient.Get(b.HealthURL)
+	resp, err := b.healthClient.Do(req)
 
 	b.Stats.mu.Lock()
 	// Check response
