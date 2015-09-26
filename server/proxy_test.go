@@ -1,23 +1,27 @@
 package server
 
 import (
-	"github.com/klauspost/doproxy/server/httpmock"
+	"bytes"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/klauspost/doproxy/server/httpmock"
 )
 
 type mockBackend struct {
 	*backend
+	n int
 }
 
 var defaultConfig *Config
 var loadOnce sync.Once
 
-func newMockBackend(t *testing.T) Backend {
+func newMockBackend(t *testing.T, n int) Backend {
 	loadOnce.Do(func() {
 		var err error
 		defaultConfig, err = ReadConfigFile("testdata/validconfig.toml")
@@ -27,6 +31,7 @@ func newMockBackend(t *testing.T) Backend {
 	})
 	b := &mockBackend{
 		backend: newBackend(defaultConfig.Backend, "", ""),
+		n:       n,
 	}
 	b.rt.mu.Lock()
 	defer b.rt.mu.Unlock()
@@ -40,7 +45,7 @@ func newMockInventory(t *testing.T, n int) *Inventory {
 	}
 	var be = make([]Backend, n)
 	for i := 0; i < n; i++ {
-		be[i] = newMockBackend(t)
+		be[i] = newMockBackend(t, i)
 	}
 	return NewInventory(be, defaultConfig.Backend)
 }
@@ -193,16 +198,25 @@ func TestProxyMethods(t *testing.T) {
 	ts := httptest.NewServer(proxy)
 	defer ts.Close()
 	for i, method := range testMethods {
-		req, err := http.NewRequest(method, ts.URL, nil)
+		body := bytes.NewBufferString("somebody")
+		if method == "HEAD" {
+			body = bytes.NewBufferString("")
+		}
+		req, err := http.NewRequest(method, ts.URL, body)
 		if err != nil {
 			t.Fatal(err)
 		}
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
-			t.Fatal(err)
+			if runtime.GOOS == "windows" && err.Error() == "EOF" && method == "PATCH" {
+				t.Log("Let me guess. You're runnning Bitdefender as AV? ;)")
+				continue
+			} else {
+				t.Fatal("method", method, "error:", err)
+			}
 		}
 		if res.StatusCode != 200 {
-			t.Fatal("method", method, ", unexpected status code", res.StatusCode)
+			t.Fatal("method", method, "unexpected status code", res.StatusCode)
 		}
 		_, err = ioutil.ReadAll(res.Body)
 		res.Body.Close()
