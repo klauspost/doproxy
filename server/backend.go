@@ -26,7 +26,7 @@ type Backend interface {
 type backend struct {
 	rt           *statRT
 	healthClient *http.Client
-	closeMonitor chan struct{}
+	closeMonitor chan chan struct{}
 	Stats        Stats
 	ServerHost   string
 	HealthURL    string
@@ -68,7 +68,7 @@ func newBackend(bec BackendConfig, serverHost, healthURL string) *backend {
 		b.Stats.Healthy = true
 	}
 
-	b.closeMonitor = make(chan struct{}, 0)
+	b.closeMonitor = make(chan chan struct{}, 0)
 
 	go b.startMonitor()
 	return b
@@ -134,8 +134,9 @@ func (b *backend) startMonitor() {
 				b.Stats.Healthy = true
 			}
 			b.Stats.mu.Unlock()
-		case <-end:
+		case n := <-end:
 			exit.Cancel()
+			close(n)
 			return
 		case n := <-exit:
 			close(n)
@@ -199,7 +200,14 @@ func (b *backend) Host() string {
 // Close the backend, which will shut down monitoring
 // of the backend.
 func (b *backend) Close() {
+	if b.closeMonitor == nil {
+		return
+	}
+	c := make(chan struct{})
+	b.closeMonitor <- c
+	<-c
 	close(b.closeMonitor)
+	b.closeMonitor = nil
 }
 
 // Connections returns the number of currently running requests.
