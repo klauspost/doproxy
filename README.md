@@ -60,7 +60,6 @@ Note that *provisioning* currently isn't available, so modifying the configurati
 
 
 # todo 
-* Load balancer tests
 * Automatic droplet creation/destruction. 
 * Retry on another backend on failure.
 * Make stats available
