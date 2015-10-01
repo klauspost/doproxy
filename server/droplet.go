@@ -3,8 +3,10 @@ package server
 import (
 	"fmt"
 	"github.com/digitalocean/godo"
+	"io/ioutil"
 	"log"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -39,6 +41,19 @@ func CreateDroplet(conf Config, name string) (*Droplet, error) {
 		name = conf.DO.HostPrefix + randStringRunes(10)
 	}
 
+	userdata := ""
+	if conf.DO.UserData != "" {
+		f, err := os.Open(conf.DO.UserData)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+		buf, err := ioutil.ReadAll(f)
+		if err != nil {
+			return nil, err
+		}
+		userdata = string(buf)
+	}
 	createRequest := &godo.DropletCreateRequest{
 		Name:   name,
 		Region: conf.DO.Region,
@@ -49,7 +64,7 @@ func CreateDroplet(conf Config, name string) (*Droplet, error) {
 		Backups:           conf.DO.Backups,
 		SSHKeys:           keys,
 		PrivateNetworking: true,
-		UserData:          conf.DO.UserData,
+		UserData:          userdata,
 	}
 
 	newDroplet, _, err := client.Droplets.Create(createRequest)
@@ -79,7 +94,11 @@ func CreateDroplet(conf Config, name string) (*Droplet, error) {
 	}
 	// Transfer proxy specific values
 	d.ServerHost = fmt.Sprintf("%s:%d", d.PrivateIP, conf.Backend.HostPort)
-	d.HealthURL = fmt.Sprintf("%s%s", d.ServerHost, conf.Backend.HealthPath)
+	if conf.Backend.HealthHTTPS {
+		d.HealthURL = fmt.Sprintf("https://%s%s", d.ServerHost, conf.Backend.HealthPath)
+	} else {
+		d.HealthURL = fmt.Sprintf("http://%s%s", d.ServerHost, conf.Backend.HealthPath)
+	}
 	return d, nil
 }
 

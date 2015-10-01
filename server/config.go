@@ -176,6 +176,7 @@ type BackendConfig struct {
 	HealthTimeout Duration `toml:"health-check-timeout"`    // Timeout for a health check. Should be less than 1 second.
 	HostPort      int      `toml:"new-host-port"`           // Host port the proxy should connect to.
 	HealthPath    string   `toml:"new-host-health-path"`    // Health path to use.
+	HealthHTTPS   bool     `toml:"new-host-health-https"`   // Set to true if the health check on new backs is https.
 }
 
 // Validate backend configuration.
