@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/klauspost/doproxy/server"
 	"github.com/klauspost/shutdown"
 	"log"
