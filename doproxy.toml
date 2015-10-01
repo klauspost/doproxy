@@ -16,15 +16,17 @@ latency-average-seconds = 30        # Use an Exponentially Weighted Moving Avera
                                     # when reporting latency to the provisioner.
 dial-timeout = "2s"                 # Timeout for connecting to a backend.
 health-check-timeout = "250ms"      # Timeout for a health check. Should be less than 1 second.
+new-host-port = 8080                # Host port the proxy should connect to.
+new-host-health-path = "/"          # Health path to use. Should start with '/'
 
 
 # DigitalOcean backend creation information
 [do-provisioner]
-enable = true
+enable = false
 token =  "878a490235d53e34b44369b8e78"      # DigitalOcean access token with Read and Write access
-ssh-key-ids = ["163420"]                    # DigitalOcean ID for your SSH Key
+ssh-key-ids = [163420]                      # DigitalOcean ID for your SSH Key
 hostname-prefix = "auto-nginx"              # Prefix added to new droplets.
-region = "nyc3"
+region = "nyc3"                             #
 size = "1gb"
 image = "ubuntu-14-04-x64"
 user-data = "sample-userdata.sh"

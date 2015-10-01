@@ -13,11 +13,12 @@ import (
 // A Backend is a single running backend instance.
 // It will monitor itself and update health and stats every second.
 type Backend interface {
-	Transport() http.RoundTripper
-	Host() string
-	Healthy() bool
-	Connections() int
-	Close()
+	Transport() http.RoundTripper // Returns a transport for the backend
+	Host() string                 // Returns the hostname of the backend
+	Healthy() bool                // Is the backend healthy?
+	Statistics() Stats            // Returns a copy of the latest statistics. Updated every second.
+	Connections() int             // Return the current number of connections
+	Close()                       // Close the backend (before shutdown/reload).
 }
 
 // backend is a common base used for sharing functionality
@@ -71,23 +72,6 @@ func newBackend(bec BackendConfig, serverHost, healthURL string) *backend {
 	b.closeMonitor = make(chan chan struct{}, 0)
 
 	go b.startMonitor()
-	return b
-}
-
-// dropletBackend is a a backend instance with a DigitalOcean droplet
-// behind it.
-type dropletBackend struct {
-	*backend
-	Droplet Droplet
-}
-
-// NewDropletBackend returns a Backend configured with the
-// Droplet information.
-func NewDropletBackend(d Droplet, bec BackendConfig) Backend {
-	b := &dropletBackend{
-		backend: newBackend(bec, d.ServerHost, d.HealthURL),
-		Droplet: d,
-	}
 	return b
 }
 
@@ -199,6 +183,14 @@ func (b *backend) Healthy() bool {
 	return ok
 }
 
+// Healthy returns the healthy state of the backend
+func (b *backend) Statistics() Stats {
+	b.Stats.mu.RLock()
+	s := b.Stats
+	b.Stats.mu.RUnlock()
+	return s
+}
+
 // Host returns the host address of the backend.
 func (b *backend) Host() string {
 	return b.ServerHost
@@ -274,6 +266,23 @@ type statRT struct {
 	running    int
 	requests   int
 	errors     int
+}
+
+// dropletBackend is a a backend instance with a DigitalOcean droplet
+// behind it.
+type dropletBackend struct {
+	*backend
+	Droplet Droplet
+}
+
+// NewDropletBackend returns a Backend configured with the
+// Droplet information.
+func NewDropletBackend(d Droplet, bec BackendConfig) Backend {
+	b := &dropletBackend{
+		backend: newBackend(bec, d.ServerHost, d.HealthURL),
+		Droplet: d,
+	}
+	return b
 }
 
 func newStatTP(rt http.RoundTripper) *statRT {

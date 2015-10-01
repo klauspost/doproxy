@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"sync"
-	"time"
 )
 
 // Inventory contains all backends in your
@@ -17,21 +16,6 @@ type Inventory struct {
 	backends []Backend
 	bec      BackendConfig
 	mu       sync.RWMutex
-}
-
-// A droplet as defined in the inventory file.
-type Droplet struct {
-	ID         int       `toml:"id"`
-	Name       string    `toml:"name"`
-	PrivateIP  string    `toml:"private-ip"`
-	ServerHost string    `toml:"server-host"`
-	HealthURL  string    `toml:"health-url"`
-	Started    time.Time `toml:"started-time"`
-}
-
-// Droplets contains all backend droplets.
-type Droplets struct {
-	Droplets []Droplet `toml:"droplet"`
 }
 
 // NewInventory will a return a new Inventory
@@ -118,4 +102,14 @@ func (i *Inventory) Close() {
 		be.Close()
 	}
 	i.mu.RUnlock()
+}
+
+// AddBackend will add a backend to the inventory
+// At the moment no checks are performed, but that could
+// happen in the future.
+func (i *Inventory) AddBackend(be Backend) error {
+	i.mu.Lock()
+	i.backends = append(i.backends, be)
+	i.mu.Unlock()
+	return nil
 }

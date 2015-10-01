@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"sync"
+	"time"
 )
 
 // A LoadBalancer is an interface for algorithms
@@ -33,7 +34,7 @@ func NewLoadBalancer(conf LBConfig, i *Inventory) (LoadBalancer, error) {
 
 // lbBase is common functionality for all load balancers
 type lbBase struct {
-	mu  sync.Mutex
+	mu  sync.RWMutex
 	inv *Inventory
 }
 
@@ -49,6 +50,44 @@ func (r *lbBase) Close() {
 	r.mu.Lock()
 	r.inv.Close()
 	r.mu.Unlock()
+}
+
+type LBStats struct {
+	HealtyBackends   int
+	UnhealtyBackends int
+	AvgLatency       time.Duration
+	Connections      int
+}
+
+func (r *lbBase) Backends() []Backend {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	r.inv.mu.RLock()
+	defer r.inv.mu.RUnlock()
+	return r.inv.backends
+}
+
+func (r *lbBase) Stats() LBStats {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	r.inv.mu.RLock()
+	defer r.inv.mu.RUnlock()
+	var stats LBStats
+	for _, be := range r.inv.backends {
+		bes := be.Statistics()
+		if bes.Healthy {
+			stats.HealtyBackends++
+			stats.AvgLatency += time.Duration(bes.Latency.Value())
+			stats.Connections += be.Connections()
+		} else {
+			stats.UnhealtyBackends++
+			stats.Connections += be.Connections()
+		}
+	}
+	if stats.HealtyBackends > 0 {
+		stats.AvgLatency = stats.AvgLatency / time.Duration(stats.HealtyBackends)
+	}
+	return stats
 }
 
 // NewRoundRobin Returns a new round-robin loadbalancer
