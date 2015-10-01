@@ -8,20 +8,10 @@ import (
 	"time"
 )
 
-type TokenSource struct {
-	AccessToken string
-}
-
-func (t *TokenSource) Token() (*oauth2.Token, error) {
-	token := &oauth2.Token{
-		AccessToken: t.AccessToken,
-	}
-	return token, nil
-}
-
 func DoClient(conf DOConfig) *godo.Client {
-	ts := &TokenSource{AccessToken: conf.Token}
-	oauthClient := oauth2.NewClient(oauth2.NoContext, ts)
+	token := &oauth2.Token{AccessToken: conf.Token}
+	t := oauth2.StaticTokenSource(token)
+	oauthClient := oauth2.NewClient(oauth2.NoContext, t)
 	return godo.NewClient(oauthClient)
 }
 

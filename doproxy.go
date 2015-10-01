@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/klauspost/doproxy/server"
 	"github.com/klauspost/shutdown"
 	"log"
@@ -31,10 +32,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading server configuration:", err)
 	}
-	inv, err := server.ReadInventory(conf.InventoryFile, conf.Backend)
-	if err != nil {
-		log.Fatal("Error loading inventory:", err)
-	}
 	switch cmd {
 	case "create":
 		name := ""
@@ -45,6 +42,11 @@ func main() {
 		if err != nil {
 			log.Fatal("Error creating droplet:", err)
 		}
+		log.Println("Adding droplet to inventory")
+		inv, err := server.ReadInventory(conf.InventoryFile, conf.Backend)
+		if err != nil {
+			log.Fatal("Error loading inventory:", err)
+		}
 		be := server.NewDropletBackend(*drop, conf.Backend)
 		err = inv.AddBackend(be)
 		if err != nil {
@@ -54,6 +56,7 @@ func main() {
 		if err != nil {
 			log.Fatal("Error saving new inventory:", err)
 		}
+		log.Println("New inventory saved.")
 	case "delete":
 		name := ""
 		if len(args) >= 2 {

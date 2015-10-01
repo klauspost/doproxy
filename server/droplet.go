@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"github.com/digitalocean/godo"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -55,6 +56,23 @@ func CreateDroplet(conf Config, name string) (*Droplet, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Println("Droplet with ID", newDroplet.ID, "created.")
+
+	n := 0
+	for newDroplet.Status != "active" {
+		log.Println("Waiting for droplet to become active.")
+		time.Sleep(time.Second * 10)
+		newDroplet, _, err = client.Droplets.Get(newDroplet.ID)
+		if err != nil {
+			return nil, err
+		}
+		n++
+		if n == 20 {
+			return nil, fmt.Errorf("Droplet did not start within 200 seconds")
+		}
+	}
+
 	d, err := godoToDroplet(newDroplet)
 	if err != nil {
 		return nil, err

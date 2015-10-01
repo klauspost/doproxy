@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -14,6 +15,8 @@ import (
 // It will monitor itself and update health and stats every second.
 type Backend interface {
 	Transport() http.RoundTripper // Returns a transport for the backend
+	ID() string                   // A string identifier of this specific backend
+	Name() string                 // A name for this backend
 	Host() string                 // Returns the hostname of the backend
 	Healthy() bool                // Is the backend healthy?
 	Statistics() Stats            // Returns a copy of the latest statistics. Updated every second.
@@ -283,6 +286,16 @@ func NewDropletBackend(d Droplet, bec BackendConfig) Backend {
 		Droplet: d,
 	}
 	return b
+}
+
+// ID returns a unique ID of this backend
+func (d *dropletBackend) ID() string {
+	return strconv.Itoa(d.Droplet.ID)
+}
+
+// ID returns a name of this backend
+func (d *dropletBackend) Name() string {
+	return d.Droplet.Name
 }
 
 func newStatTP(rt http.RoundTripper) *statRT {
