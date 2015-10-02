@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/klauspost/doproxy/server"
 	"github.com/klauspost/shutdown"
 	"log"
@@ -13,6 +14,18 @@ import (
 var configfile = flag.String("config", "doproxy.toml", "Use this config file")
 
 func main() {
+	//
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s [-options] [command]\n", os.Args[0])
+		fmt.Println("Options:")
+		flag.PrintDefaults()
+		fmt.Println("Commands: (if none is given the doproxy server is started)")
+		fmt.Println(`  create "optinal-name"`)
+		fmt.Println(`      Create a new backend and add it as a backend to the configuration.`)
+		fmt.Println(`      If no name is given a name is generated.`)
+		fmt.Println(`  delete id`)
+		fmt.Println(`      Delete a backend with the given id.`)
+	}
 	flag.Parse()
 	shutdown.Logger = log.New(os.Stdout, "", log.LstdFlags)
 	shutdown.OnSignal(0, os.Interrupt, syscall.SIGTERM)
@@ -31,6 +44,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading server configuration:", err)
 	}
+	// We do not want health checks to be running.
+	conf.Backend.DisableHealth = true
 	switch cmd {
 	case "create":
 		name := ""
@@ -62,5 +77,11 @@ func main() {
 			name = args[1]
 		}
 		_ = name
+	case "help":
+		flag.Usage()
+	default:
+		flag.Usage()
+		log.Println("Unknown command:", cmd)
+		os.Exit(1)
 	}
 }

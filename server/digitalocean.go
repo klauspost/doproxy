@@ -23,6 +23,9 @@ func (e ErrUnableToDelete) Error() string {
 	return e.err
 }
 
+// RemoveDroplet will query DO to remove a droplet.
+// The ID of the droplet is used to identify the droplet.
+// If an error is returned the droplet most likely has not been removed.
 func RemoveDroplet(conf Config, drop Droplet) error {
 	client := DoClient(conf.DO)
 
@@ -57,6 +60,9 @@ func godoToDroplet(do *godo.Droplet) (*Droplet, error) {
 	return &drop, nil
 }
 
+// godoGetPrivateV4 will return the first private V4 network
+// interface from a collection of network interfaces. If there is
+// no private v4 network interface an error will be returned.
 func godoGetPrivateV4(net *godo.Networks) (*godo.NetworkV4, error) {
 	if net == nil {
 		return nil, fmt.Errorf("no network info returned")

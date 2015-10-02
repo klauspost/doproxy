@@ -177,6 +177,7 @@ type BackendConfig struct {
 	HostPort      int      `toml:"new-host-port"`           // Host port the proxy should connect to.
 	HealthPath    string   `toml:"new-host-health-path"`    // Health path to use.
 	HealthHTTPS   bool     `toml:"new-host-health-https"`   // Set to true if the health check on new backs is https.
+	DisableHealth bool     `toml:"disable-health-check"`    // Disable health checks.
 }
 
 // Validate backend configuration.

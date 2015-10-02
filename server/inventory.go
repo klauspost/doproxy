@@ -113,3 +113,16 @@ func (i *Inventory) AddBackend(be Backend) error {
 	i.mu.Unlock()
 	return nil
 }
+
+// BackendID will return a backend with the specified ID,
+// as well as a boolean indicating if it was found.
+func (i *Inventory) BackendID(id string) (Backend, bool) {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+	for _, be := range i.backends {
+		if be.ID() == id {
+			return be, true
+		}
+	}
+	return nil, false
+}
