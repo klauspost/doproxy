@@ -2,18 +2,21 @@ package server
 
 import (
 	"fmt"
-	"github.com/digitalocean/godo"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
 	"time"
+
+	"github.com/digitalocean/godo"
+	"github.com/naoina/toml"
 )
 
 // A Droplet as defined in the inventory file.
 type Droplet struct {
 	ID         int       `toml:"id"`
 	Name       string    `toml:"name"`
+	PublicIP   string    `toml:"public-ip"`
 	PrivateIP  string    `toml:"private-ip"`
 	ServerHost string    `toml:"server-host"`
 	HealthURL  string    `toml:"health-url"`
@@ -102,6 +105,19 @@ func CreateDroplet(conf Config, name string) (*Droplet, error) {
 	return d, nil
 }
 
+func (d *Droplet) ToBackend(bec BackendConfig) (Backend, error) {
+	if d.PrivateIP == "" {
+		fmt.Errorf("cannot convert droplet %d to backend: no private ip v4 address", d.ID)
+	}
+	d.ServerHost = fmt.Sprintf("%s:%d", d.PrivateIP, bec.HostPort)
+	if bec.HealthHTTPS {
+		d.HealthURL = fmt.Sprintf("https://%s%s", d.ServerHost, bec.HealthPath)
+	} else {
+		d.HealthURL = fmt.Sprintf("http://%s%s", d.ServerHost, bec.HealthPath)
+	}
+	return NewDropletBackend(*d, bec), nil
+}
+
 // Delete a running droplet
 func (d Droplet) Delete(conf Config) error {
 	client := DoClient(conf.DO)
@@ -145,6 +161,24 @@ func (d Droplet) Reboot(conf Config) error {
 		}
 	}
 	return nil
+}
+
+func (d Droplet) String() string {
+	b, err := toml.Marshal(d)
+	if err != nil {
+		return "Error:" + err.Error()
+	}
+	return string(b)
+}
+
+// DropletID returns a Droplet with the specified ID.
+func (d Droplets) DropletID(id int) (drop *Droplet, ok bool) {
+	for _, drop := range d.Droplets {
+		if drop.ID == id {
+			return &drop, true
+		}
+	}
+	return nil, false
 }
 
 // Generate a random string of n characters.

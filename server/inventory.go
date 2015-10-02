@@ -2,11 +2,12 @@ package server
 
 import (
 	"fmt"
-	"github.com/klauspost/shutdown"
-	"github.com/naoina/toml"
 	"io/ioutil"
 	"os"
 	"sync"
+
+	"github.com/klauspost/shutdown"
+	"github.com/naoina/toml"
 )
 
 // Inventory contains all backends in your
