@@ -18,7 +18,7 @@ func TestReadInventory(t *testing.T) {
 
 	bes := inv.backends
 	for i, be := range bes {
-		d, ok := be.(*dropletBackend)
+		d, ok := be.(*DropletBackend)
 		if !ok {
 			t.Fatalf("backend type was not *dropletBackend, it was %T", be)
 		}
@@ -62,7 +62,7 @@ func TestSaveInventory(t *testing.T) {
 	testtime := time.Now().Round(time.Millisecond)
 
 	for _, be := range bes {
-		d, ok := be.(*dropletBackend)
+		d, ok := be.(*DropletBackend)
 		if !ok {
 			t.Fatalf("backend type was not *dropletBackend, it was %T", be)
 		}
@@ -80,7 +80,7 @@ func TestSaveInventory(t *testing.T) {
 	}
 	bes = inv.backends
 	for i, be := range bes {
-		d, ok := be.(*dropletBackend)
+		d, ok := be.(*DropletBackend)
 		if !ok {
 			t.Fatalf("backend type was not *dropletBackend, it was %T", be)
 		}

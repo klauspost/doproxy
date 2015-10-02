@@ -1,14 +1,15 @@
 package server
 
 import (
-	"github.com/VividCortex/ewma"
-	"github.com/klauspost/shutdown"
 	"log"
 	"net"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/VividCortex/ewma"
+	"github.com/klauspost/shutdown"
 )
 
 // A Backend is a single running backend instance.
@@ -274,7 +275,7 @@ type statRT struct {
 
 // dropletBackend is a a backend instance with a DigitalOcean droplet
 // behind it.
-type dropletBackend struct {
+type DropletBackend struct {
 	*backend
 	Droplet Droplet
 }
@@ -282,7 +283,7 @@ type dropletBackend struct {
 // NewDropletBackend returns a Backend configured with the
 // Droplet information.
 func NewDropletBackend(d Droplet, bec BackendConfig) Backend {
-	b := &dropletBackend{
+	b := &DropletBackend{
 		backend: newBackend(bec, d.ServerHost, d.HealthURL),
 		Droplet: d,
 	}
@@ -290,12 +291,12 @@ func NewDropletBackend(d Droplet, bec BackendConfig) Backend {
 }
 
 // ID returns a unique ID of this backend
-func (d *dropletBackend) ID() string {
+func (d *DropletBackend) ID() string {
 	return strconv.Itoa(d.Droplet.ID)
 }
 
 // ID returns a name of this backend
-func (d *dropletBackend) Name() string {
+func (d *DropletBackend) Name() string {
 	return d.Droplet.Name
 }
 

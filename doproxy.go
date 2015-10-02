@@ -32,6 +32,9 @@ func main() {
 		fmt.Println(`      Delete a backend with the given id.`)
 		fmt.Println(`  list`)
 		fmt.Println(`      List all currently running droplets.`)
+		fmt.Println(`  sanitize [apply]`)
+		fmt.Println(`      Sanitize the inventory. All droplets that cannot be located on`)
+		fmt.Println(`      DigitalOcean will be listed, or removed if 'apply' is specified.`)
 	}
 	flag.Parse()
 	shutdown.Logger = log.New(os.Stdout, "", log.LstdFlags)
@@ -124,6 +127,75 @@ func main() {
 		err = inv.SaveDroplets(conf.InventoryFile)
 		if err != nil {
 			log.Fatal("Error saving inventory:", err)
+		}
+	case "sanitize":
+		apply := false
+		if len(args) >= 2 {
+			apply = args[1] == "apply"
+		}
+
+		inv, err := server.ReadInventory(conf.InventoryFile, conf.Backend)
+		if err != nil {
+			log.Fatal("Error loading inventory:", err)
+		}
+		drops, err := server.ListDroplets(*conf)
+		if err != nil {
+			log.Fatal("Error listing droplets:", err)
+		}
+		ids := inv.IDs()
+		var remove []string
+		for _, id := range ids {
+			n, err := strconv.Atoi(id)
+			if err != nil {
+				log.Println("warning: unable to parse id", id)
+				continue
+			}
+			_, ok := drops.DropletID(n)
+			if ok {
+				continue
+			}
+			be, ok := inv.BackendID(id)
+			if !ok {
+				continue
+			}
+			switch be.(type) {
+			case *server.DropletBackend:
+				remove = append(remove, id)
+			default:
+				log.Printf("Unknown backend type %T\n", be)
+			}
+		}
+		if apply {
+			for _, be := range remove {
+				fmt.Println("Removing", be)
+				err := inv.Remove(be)
+				if err != nil {
+					log.Fatal("Error removing item from inventory:", err)
+				}
+			}
+			err = inv.SaveDroplets(conf.InventoryFile)
+			if err != nil {
+				log.Fatal("Error saving inventory:", err)
+			}
+		} else {
+			switch len(remove) {
+			case 0:
+				fmt.Println("All items in inventory running")
+			case 1:
+				fmt.Println("1 iventory backend could not be located:")
+				defer func() {
+					fmt.Printf("Run '%s sanitize apply' to remove it.\n", os.Args[0])
+				}()
+
+			default:
+				fmt.Println(len(remove), "inventory backends could not be located:")
+				defer func() {
+					fmt.Printf("Run '%s sanitize apply' to remove them.\n", os.Args[0])
+				}()
+			}
+			for _, be := range remove {
+				fmt.Println("ID", be)
+			}
 		}
 	case "delete":
 		name := ""
