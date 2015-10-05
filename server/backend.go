@@ -20,7 +20,7 @@ type Backend interface {
 	Name() string                 // A name for this backend
 	Host() string                 // Returns the hostname of the backend
 	Healthy() bool                // Is the backend healthy?
-	Statistics() Stats            // Returns a copy of the latest statistics. Updated every second.
+	Statistics() *Stats           // Returns a copy of the latest statistics. Updated every second.
 	Connections() int             // Return the current number of connections
 	Close()                       // Close the backend (before shutdown/reload).
 }
@@ -189,11 +189,11 @@ func (b *backend) Healthy() bool {
 }
 
 // Healthy returns the healthy state of the backend
-func (b *backend) Statistics() Stats {
+func (b *backend) Statistics() *Stats {
 	b.Stats.mu.RLock()
 	s := b.Stats
 	b.Stats.mu.RUnlock()
-	return s
+	return &s
 }
 
 // Host returns the host address of the backend.
