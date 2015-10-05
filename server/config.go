@@ -1,13 +1,16 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/naoina/toml"
-	"io/ioutil"
+	"html/template"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/naoina/toml"
 )
 
 // Config contains the main server configuration
@@ -26,18 +29,25 @@ type Config struct {
 	DO            DOConfig        `toml:"do-provisioner"`
 }
 
+// ReadConfigFile will open the file with the supplied name
+// and return the configuration. The configuration is validated.
 func ReadConfigFile(file string) (*Config, error) {
-	f, err := os.Open(file)
+	tmpl := template.New(filepath.Base(file)).Funcs(template.FuncMap{
+		"env": os.Getenv,
+	})
+	t, err := tmpl.ParseFiles(file)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
-	conf, err := ioutil.ReadAll(f)
+
+	var buf bytes.Buffer
+	err = t.Execute(&buf, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	config := Config{}
-	err = toml.Unmarshal(conf, &config)
+	err = toml.NewDecoder(&buf).Decode(&config)
 	if err != nil {
 		return nil, err
 	}
