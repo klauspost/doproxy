@@ -25,13 +25,15 @@ func main() {
 		fmt.Println("Commands: (if none is given the doproxy server is started)")
 		fmt.Println(`  add <id>`)
 		fmt.Println(`      Add a running droplet to your inventory.`)
-		fmt.Println(`  create "optinal-name"`)
+		fmt.Println(`  create [new-droplet-name]`)
 		fmt.Println(`      Create a new backend and add it as a backend to the configuration.`)
 		fmt.Println(`      If no name is given a name is generated.`)
 		fmt.Println(`  delete <id>`)
 		fmt.Println(`      Delete a backend with the given id.`)
 		fmt.Println(`  list`)
 		fmt.Println(`      List all currently running droplets.`)
+		fmt.Println(`  reboot <id>`)
+		fmt.Println(`      Reboot the backend with the given id.`)
 		fmt.Println(`  sanitize [apply]`)
 		fmt.Println(`      Sanitize the inventory. All droplets that cannot be located on`)
 		fmt.Println(`      DigitalOcean will be listed, or removed if 'apply' is specified.`)
@@ -196,6 +198,60 @@ func main() {
 			for _, be := range remove {
 				fmt.Println("ID", be)
 			}
+		}
+	case "reboot":
+		if len(args) < 2 {
+			log.Fatal("No id supplied")
+		}
+		name := args[1]
+		n, err := strconv.Atoi(name)
+		if err != nil {
+			log.Fatalf("warning: unable to parse id %q", name)
+		}
+
+		inv, err := server.ReadInventory(conf.InventoryFile, conf.Backend)
+		if err != nil {
+			log.Fatal("Error loading inventory:", err)
+		}
+
+		drops, err := server.ListDroplets(*conf)
+		if err != nil {
+			log.Fatalln("Error listing droplets:", err)
+		}
+		drop, ok := drops.DropletID(n)
+		if !ok {
+			log.Fatalln("Cannot find any running droplet droplet with id", n)
+		}
+		// If we have it in the inventory
+		be, hasBe := inv.BackendID(name)
+		if hasBe {
+			log.Println("Removing backend", be.Name(), "from inventory")
+			if err := inv.Remove(name); err != nil {
+				log.Fatal("Error removing from inventory:", err)
+			}
+			if err := inv.SaveDroplets(conf.InventoryFile); err != nil {
+				log.Fatal("Error saving inventory:", err)
+			}
+			log.Println("Backend removed. Wait 5 seconds before reboot")
+			time.Sleep(time.Second * 5)
+		}
+
+		err = drop.Reboot(*conf)
+		if err != nil {
+			log.Println("Error rebooting:", n)
+		} else {
+			log.Println("Initiated reboot of", drop.ID, drop.Name)
+		}
+		// Re-add Backend
+		if hasBe {
+			time.Sleep(time.Second * 5)
+			if err := inv.AddBackend(be); err != nil {
+				log.Fatal("Error re-adding backend to inventory:", err)
+			}
+			if err := inv.SaveDroplets(conf.InventoryFile); err != nil {
+				log.Fatal("Error saving inventory:", err)
+			}
+			log.Println("Re-added backend to inventory")
 		}
 	case "delete":
 		name := ""
