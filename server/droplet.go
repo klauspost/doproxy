@@ -107,7 +107,7 @@ func CreateDroplet(conf Config, name string) (*Droplet, error) {
 
 func (d *Droplet) ToBackend(bec BackendConfig) (Backend, error) {
 	if d.PrivateIP == "" {
-		fmt.Errorf("cannot convert droplet %d to backend: no private ip v4 address", d.ID)
+		return nil, fmt.Errorf("cannot convert droplet %d to backend: no private ip v4 address", d.ID)
 	}
 	d.ServerHost = fmt.Sprintf("%s:%d", d.PrivateIP, bec.HostPort)
 	if bec.HealthHTTPS {
