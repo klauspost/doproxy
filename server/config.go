@@ -171,9 +171,13 @@ func (c LBConfig) Validate() error {
 // backends. This information is mainly used to
 // instantiate and destroy backends on demand.
 type BackendConfig struct {
-	DialTimeout   Duration `toml:"dial-timeout"`
-	LatencyAvg    int      `toml:"latency-average-seconds"`
-	HealthTimeout Duration `toml:"health-check-timeout"`
+	DialTimeout   Duration `toml:"dial-timeout"`            // Timeout for connecting to a backend.
+	LatencyAvg    int      `toml:"latency-average-seconds"` // Measure latency over this many seconds
+	HealthTimeout Duration `toml:"health-check-timeout"`    // Timeout for a health check. Should be less than 1 second.
+	HostPort      int      `toml:"new-host-port"`           // Host port the proxy should connect to.
+	HealthPath    string   `toml:"new-host-health-path"`    // Health path to use.
+	HealthHTTPS   bool     `toml:"new-host-health-https"`   // Set to true if the health check on new backs is https.
+	DisableHealth bool     `toml:"disable-health-check"`    // Disable health checks.
 }
 
 // Validate backend configuration.
@@ -197,15 +201,15 @@ func (c BackendConfig) Validate() error {
 
 // DigitalOcean provisioning config
 type DOConfig struct {
-	Enable     bool     `toml:"enable"`
-	HostPrefix string   `toml:"hostname-prefix"`
-	Region     string   `toml:"region"`
-	Size       string   `toml:"size"`
-	Image      string   `toml:"image"`
-	UserData   string   `toml:"user-data"`
-	Backups    bool     `toml:"backups"`
-	Token      string   `toml:"token"`
-	SSHKeyID   []string `toml:"ssh-key-ids"`
+	Enable     bool   `toml:"enable"`
+	HostPrefix string `toml:"hostname-prefix"`
+	Region     string `toml:"region"`
+	Size       string `toml:"size"`
+	Image      string `toml:"image"`
+	UserData   string `toml:"user-data"`
+	Backups    bool   `toml:"backups"`
+	Token      string `toml:"token"`
+	SSHKeyID   []int  `toml:"ssh-key-ids"`
 }
 
 func (c DOConfig) Validate() error {

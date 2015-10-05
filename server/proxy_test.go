@@ -10,12 +10,23 @@ import (
 	"sync"
 	"testing"
 
+	"fmt"
 	"github.com/klauspost/doproxy/server/httpmock"
 )
 
 type mockBackend struct {
 	*backend
 	n int
+}
+
+// ID returns a unique ID of this backend
+func (d *mockBackend) ID() string {
+	return fmt.Sprintf("id%d", d.n)
+}
+
+// ID returns a name of this backend
+func (d *mockBackend) Name() string {
+	return fmt.Sprintf("mockBackend%s", d.n)
 }
 
 var defaultConfig *Config

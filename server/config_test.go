@@ -35,7 +35,7 @@ var valid_config = Config{
 		UserData:   "sample-startup.sh",
 		Backups:    false,
 		Token:      "878a490235d53e34b44369b8e78",
-		SSHKeyID:   []string{"163420"},
+		SSHKeyID:   []int{163420},
 	},
 	Provision: ProvisionConfig{
 		Enable:            true,

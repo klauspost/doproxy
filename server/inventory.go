@@ -2,12 +2,12 @@ package server
 
 import (
 	"fmt"
-	"github.com/klauspost/shutdown"
-	"github.com/naoina/toml"
 	"io/ioutil"
 	"os"
 	"sync"
-	"time"
+
+	"github.com/klauspost/shutdown"
+	"github.com/naoina/toml"
 )
 
 // Inventory contains all backends in your
@@ -19,21 +19,6 @@ type Inventory struct {
 	mu       sync.RWMutex
 }
 
-// A droplet as defined in the inventory file.
-type Droplet struct {
-	ID         int       `toml:"id"`
-	Name       string    `toml:"name"`
-	PrivateIP  string    `toml:"private-ip"`
-	ServerHost string    `toml:"server-host"`
-	HealthURL  string    `toml:"health-url"`
-	Started    time.Time `toml:"started-time"`
-}
-
-// Droplets contains all backend droplets.
-type Droplets struct {
-	Droplets []Droplet `toml:"droplet"`
-}
-
 // NewInventory will a return a new Inventory
 // with the supplied backends and config.
 func NewInventory(b []Backend, bec BackendConfig) *Inventory {
@@ -41,6 +26,7 @@ func NewInventory(b []Backend, bec BackendConfig) *Inventory {
 }
 
 // ReadInventory will read an inventory file and return the found items.
+// TODO: Make sure Id is unique
 func ReadInventory(file string, bec BackendConfig) (*Inventory, error) {
 	f, err := os.Open(file)
 	if err != nil {
@@ -83,7 +69,7 @@ func (i *Inventory) SaveDroplets(file string) error {
 	// Put into object
 	drops := Droplets{}
 	for _, be := range i.backends {
-		drop, ok := be.(*dropletBackend)
+		drop, ok := be.(*DropletBackend)
 		if ok {
 			drops.Droplets = append(drops.Droplets, drop.Droplet)
 		}
@@ -118,4 +104,52 @@ func (i *Inventory) Close() {
 		be.Close()
 	}
 	i.mu.RUnlock()
+}
+
+// AddBackend will add a backend to the inventory
+// At the moment no checks are performed, but that could
+// happen in the future.
+func (i *Inventory) AddBackend(be Backend) error {
+	i.mu.Lock()
+	i.backends = append(i.backends, be)
+	i.mu.Unlock()
+	return nil
+}
+
+// Remove will remove a backend from the inventory
+// If the backend cannot be found an error will be returned.
+func (i *Inventory) Remove(id string) error {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	for j, be := range i.backends {
+		if be.ID() == id {
+			i.backends = append(i.backends[:j], i.backends[j+1:]...)
+			return nil
+		}
+	}
+	return fmt.Errorf("backend %q could not be found in inventory", id)
+}
+
+// BackendID will return a backend with the specified ID,
+// as well as a boolean indicating if it was found.
+func (i *Inventory) BackendID(id string) (Backend, bool) {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+	for _, be := range i.backends {
+		if be.ID() == id {
+			return be, true
+		}
+	}
+	return nil, false
+}
+
+// IDs will return the IDs of all backends
+func (i *Inventory) IDs() []string {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+	ret := make([]string, len(i.backends))
+	for j, be := range i.backends {
+		ret[j] = be.ID()
+	}
+	return ret
 }

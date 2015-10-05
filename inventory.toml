@@ -1,14 +1,32 @@
 [[droplet]]
-id = 1
-name = "auto-nginx 1"
-private-ip = "192.168.0.1"
-server-host = "192.168.0.1:8080"
-health-url = "http://192.168.0.1:8080/index.html"
-
+id=1
+name="auto-nginx 1"
+public-ip=""
+private-ip="192.168.0.1"
+server-host="192.168.0.1:8080"
+health-url="http://192.168.0.1:8080/index.html"
+started-time=0001-01-01T00:00:00Z
 [[droplet]]
-id = 2
-name = "auto-nginx 2"
-private-ip = "192.168.0.2"
-server-host = "192.168.0.2:8080"
-health-url = "http://192.168.0.2:8080/index.html"
-
+id=2
+name="auto-nginx 2"
+public-ip=""
+private-ip="192.168.0.2"
+server-host="192.168.0.2:8080"
+health-url="http://192.168.0.2:8080/index.html"
+started-time=0001-01-01T00:00:00Z
+[[droplet]]
+id=7973923
+name="auto-nginxKY3BdcaYeH"
+public-ip=""
+private-ip="10.132.221.249"
+server-host="10.132.221.249:8080"
+health-url="10.132.221.249:8080/"
+started-time=2015-10-01T14:02:42Z
+[[droplet]]
+id=7993556
+name="auto-nginxA3GWw3uZv6"
+public-ip="45.55.229.160"
+private-ip="10.132.169.170"
+server-host="10.132.169.170:8080"
+health-url="http://10.132.169.170:8080/"
+started-time=2015-10-02T12:08:29Z
