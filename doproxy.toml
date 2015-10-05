@@ -46,4 +46,4 @@ upscale-time = "3m"             # How long should the latency be below threshold
                                 # This is an Exponentially Weighted Moving Average.
 upscale-every = "15m"           # How long between a new server can be provisioned.
 max-health-failures = 180       # If a server fails this many health consequtive health checks, it will be deprovisioned.
-                                # Health checks is performed every second.
+                                # Health checks are performed every second.
