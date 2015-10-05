@@ -30,6 +30,8 @@ func main() {
 		fmt.Println(`      If no name is given a name is generated.`)
 		fmt.Println(`  delete <id>`)
 		fmt.Println(`      Delete a backend with the given id.`)
+		fmt.Println(`  destroy <id>`)
+		fmt.Println(`      Destroy a running droplet with the given id.`)
 		fmt.Println(`  list`)
 		fmt.Println(`      List all currently running droplets.`)
 		fmt.Println(`  reboot <id>`)
@@ -130,6 +132,7 @@ func main() {
 		if err != nil {
 			log.Fatal("Error saving inventory:", err)
 		}
+		log.Printf("Backend %q added to inventory", sid)
 	case "sanitize":
 		apply := false
 		if len(args) >= 2 {
@@ -254,11 +257,77 @@ func main() {
 			log.Println("Re-added backend to inventory")
 		}
 	case "delete":
-		name := ""
-		if len(args) >= 2 {
-			name = args[1]
+		if len(args) < 2 {
+			log.Fatal("No id supplied")
 		}
-		_ = name
+		name := args[1]
+
+		inv, err := server.ReadInventory(conf.InventoryFile, conf.Backend)
+		if err != nil {
+			log.Fatal("Error loading inventory:", err)
+		}
+		_, ok := inv.BackendID(name)
+		if !ok {
+			log.Fatalln("Unable to locate a backend with ID", name)
+		}
+		err = inv.Remove(name)
+		if err != nil {
+			log.Fatalln("Unable to delete backend:", err)
+		}
+
+		err = inv.SaveDroplets(conf.InventoryFile)
+		if err != nil {
+			log.Fatalln("Error saving updated inventory:", err)
+		}
+		log.Printf("Backend %q deleted from inventory", name)
+
+	case "destroy":
+		if len(args) < 2 {
+			log.Fatal("No id supplied")
+		}
+		name := args[1]
+		n, err := strconv.Atoi(name)
+		if err != nil {
+			log.Fatalf("warning: unable to parse id %q", name)
+		}
+
+		drops, err := server.ListDroplets(*conf)
+		if err != nil {
+			log.Fatalln("Error listing droplets:", err)
+		}
+		drop, ok := drops.DropletID(n)
+		if !ok {
+			log.Fatalln("Cannot find any running droplet droplet with id", n)
+		}
+
+		inv, err := server.ReadInventory(conf.InventoryFile, conf.Backend)
+		if err != nil {
+			log.Fatal("Error loading inventory:", err)
+		}
+		_, ok = inv.BackendID(name)
+		if !ok {
+			log.Println("Unable to locate a backend with ID", name)
+		} else {
+			err = inv.Remove(name)
+			if err != nil {
+				log.Fatalln("Unable to delete backend:", err)
+			}
+
+			err = inv.SaveDroplets(conf.InventoryFile)
+			if err != nil {
+				log.Fatalln("Error saving updated inventory:", err)
+			}
+			log.Printf("Backend %s deleted from inventory", name)
+
+			time.Sleep(time.Second * 5)
+		}
+		err = drop.Delete(*conf)
+		if err != nil {
+			log.Fatalln("Error destroying droplet:", err)
+		}
+
+		log.Printf("Droplet %d %q destroyed", drop.ID, drop.Name)
+
 	case "help":
 		flag.Usage()
 	default:
