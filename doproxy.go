@@ -92,7 +92,7 @@ func main() {
 		}
 		fmt.Printf("%d Currently Running:\n", len(drops.Droplets))
 		for _, drop := range drops.Droplets {
-			fmt.Println("[[droplet]]\n" + drop.String())
+			fmt.Println("\n[[droplet]]\n" + drop.String())
 		}
 	case "add":
 		if len(args) < 2 {
