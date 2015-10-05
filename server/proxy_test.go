@@ -26,7 +26,7 @@ func (d *mockBackend) ID() string {
 
 // ID returns a name of this backend
 func (d *mockBackend) Name() string {
-	return fmt.Sprintf("mockBackend%s", d.n)
+	return fmt.Sprintf("mockBackend%d", d.n)
 }
 
 var defaultConfig *Config
