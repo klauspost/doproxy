@@ -73,7 +73,7 @@ func newBackend(bec BackendConfig, serverHost, healthURL string) *backend {
 		b.Stats.Healthy = true
 	}
 
-	if bec.DisableHealth {
+	if !bec.DisableHealth {
 		b.closeMonitor = make(chan chan struct{}, 0)
 		go b.startMonitor()
 	}
