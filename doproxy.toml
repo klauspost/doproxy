@@ -23,14 +23,14 @@ new-host-health-path = "/"          # Health path to use. Should start with '/'
 # DigitalOcean backend creation information
 [do-provisioner]
 enable = false
-token =  "878a490235d53e34b44369b8e78"      # DigitalOcean access token with Read and Write access
-ssh-key-ids = [163420]                      # DigitalOcean ID for your SSH Key
-hostname-prefix = "auto-nginx"              # Prefix added to new droplets.
-region = "nyc3"                             #
-size = "1gb"
-image = "ubuntu-14-04-x64"
-user-data = "sample-userdata.sh"
-backups = false
+token =  "878a490235d53e34b44369b8e78"      # DO access token with Read and Write access **YOU MUST CHANGE THIS ***
+ssh-key-ids = [163420]                      # DO ID for your SSH Keys to add to new droplets
+hostname-prefix = "auto-nginx-"             # Prefix added to new droplets.
+region = "nyc3"                             # Region for new droplets
+size = "1gb"                                # Size of droplets
+image = "ubuntu-14-04-x64"                  # Image of new droplets
+user-data = "sample-userdata.sh"            # A file containing user data. Set to empty to disable.
+backups = false                             # Should backups be enabled for new droplets.
 
 
 [provisioning]

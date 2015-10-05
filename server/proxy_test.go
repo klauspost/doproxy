@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +11,6 @@ import (
 	"sync"
 	"testing"
 
-	"fmt"
 	"github.com/klauspost/doproxy/server/httpmock"
 )
 
