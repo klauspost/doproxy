@@ -93,6 +93,7 @@ To test if you can connect to your servers, you can execute:
 ```
 >doproxy list
 1 Currently Running:
+
 [[droplet]]
 id=8038120
 name="auto-nginxAoaIO5xkU7"
@@ -125,6 +126,11 @@ To remove a droplet, execute:
 2015/10/05 14:50:04 Droplet 8038120 "auto-nginxAoaIO5xkU7" destroyed
 ```
 
+There are additional commands:
+* `doproxy sanitize` will list droplets found in your inventory file, which cannot be located on DO. 
+* `doproxy sanitize apply` will remove these droplets from your inventory.
+* `doproxy add 1234` will add a running droplet with the ID you specify to your inventory.
+* `doproxy delete 1234` will remove a droplet from the inventory, but it will keep running.
 
 
 # todo 
