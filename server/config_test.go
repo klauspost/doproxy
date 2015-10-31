@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Must matched parsed values of "testdata/validconfig.toml"
+// Must match parsed values of "testdata/validconfig.toml"
 var valid_config = Config{
 	Bind:         ":8000",
 	Https:        false,
