@@ -1,3 +1,21 @@
+# RETIRED
+
+I have chosen to retire this project, at least for the time being.
+
+While it could be interesting to continue development, I have stopped active development. I have never made any formal announcements on the project, so I will add this note up front for anyone stumbling on this to see.
+
+* This has no URl-specific routing. This can be added, but complicates matters.
+* Should droplet creation really be in the loadbalancer, or would a separate app be better?
+* Service discovery via consul/etcd/zookeeper/doozerd is probably appropriate and should be included.
+ 
+If anyone would like to continue this, feel free to add a PR with a link to your fork. If I should decide to resume development I will remove this message.
+
+Meanwhile, if you are looking for a lightweight but powerful load balancer, have a look at  [Træfik](http://traefik.github.io/).
+
+
+/Nov 2015, Klaus Post
+
+
 ![doproxy](https://img.klauspost.com/doproxy-trans-700.png "doproxy")
 
 doproxy is a a Reverse Proxy load balancer for managing multiple DigitalOcean backends. It allows you to connect several backends to a single outgoing port, with load balancing between each server.
